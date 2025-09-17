@@ -1,0 +1,70 @@
+const Ajv = require("ajv");
+const ajv = new Ajv({ allErrors: true });
+
+// Custom keyword: works with configurable start/end fields
+ajv.addKeyword({
+  keyword: "noDateOverlap",
+  type: "array",
+  errors: true,
+  validate: function (schema, data) {
+    const { startKey, endKey } = schema;
+    if (!startKey || !endKey) return true;
+
+    const sorted = [...data].sort(
+      (a, b) => new Date(a[startKey]) - new Date(b[startKey])
+    );
+
+    for (let i = 1; i < sorted.length; i++) {
+      const prev = sorted[i - 1];
+      const curr = sorted[i];
+      if (new Date(curr[startKey]) <= new Date(prev[endKey])) {
+        return false;
+      }
+    }
+    return true;
+  },
+  metaSchema: {
+    type: "object",
+    properties: {
+      startKey: { type: "string" },
+      endKey: { type: "string" }
+    },
+    required: ["startKey", "endKey"]
+  }
+});
+
+const schema = {
+  type: "object",
+  properties: {
+    asset: {
+      type: "object",
+      properties: {
+        licenses: {
+          type: "array",
+          items: {
+            type: "object",
+            properties: {
+              firstDate: { type: "string", format: "date" },
+              lastDate: { type: "string", format: "date" }
+            },
+            required: ["firstDate", "lastDate"]
+          },
+          noDateOverlap: { startKey: "firstDate", endKey: "lastDate" }
+        },
+        contracts: {
+          type: "array",
+          items: {
+            type: "object",
+            properties: {
+              startDate: { type: "string", format: "date" },
+              endDate: { type: "string", format: "date" }
+            },
+            required: ["startDate", "endDate"]
+          },
+          noDateOverlap: { startKey: "startDate", endKey: "endDate" }
+        }
+      },
+      required: ["licenses", "contracts"]
+    }
+  }
+};
