@@ -1,0 +1,52 @@
+import com.nimbusds.jose.*;
+import com.nimbusds.jose.crypto.*;
+import com.nimbusds.jwt.*;
+
+import java.util.Date;
+import java.util.Map;
+
+public class JwtEncryptionUtil {
+
+    // 32-byte secret key (must be exactly 32 characters for A256GCM)
+    private static final String SECRET_KEY = "12345678901234567890123456789012";
+
+    // Encrypt user details into a JWT
+    public static String encrypt(Map<String, Object> userDetails) throws Exception {
+
+        // 1️⃣ Create claims
+        JWTClaimsSet claims = new JWTClaimsSet.Builder()
+                .claim("user", userDetails)
+                .issueTime(new Date())
+                .expirationTime(new Date(System.currentTimeMillis() + 3600_000)) // 1 hour expiry
+                .build();
+
+        // 2️⃣ Create JWE header (direct encryption)
+        JWEHeader header = new JWEHeader.Builder(JWEAlgorithm.DIR, EncryptionMethod.A256GCM)
+                .contentType("JWT") // indicates this is a nested JWT
+                .build();
+
+        // 3️⃣ Create EncryptedJWT object
+        EncryptedJWT jwt = new EncryptedJWT(header, claims);
+
+        // 4️⃣ Encrypt using symmetric key
+        DirectEncrypter encrypter = new DirectEncrypter(SECRET_KEY.getBytes());
+        jwt.encrypt(encrypter);
+
+        // 5️⃣ Return encrypted JWT string
+        return jwt.serialize();
+    }
+
+    // Decrypt JWT back into user details
+    public static Map<String, Object> decrypt(String encryptedToken) throws Exception {
+
+        // 1️⃣ Parse the encrypted JWT
+        EncryptedJWT jwt = EncryptedJWT.parse(encryptedToken);
+
+        // 2️⃣ Decrypt using the same key
+        DirectDecrypter decrypter = new DirectDecrypter(SECRET_KEY.getBytes());
+        jwt.decrypt(decrypter);
+
+        // 3️⃣ Extract claim
+        return jwt.getJWTClaimsSet().getJSONObjectClaim("user");
+    }
+}
