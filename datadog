@@ -1,0 +1,34 @@
+"environment": [
+  {
+    "name": "JAVA_TOOL_OPTIONS",
+    "value": "-javaagent:/dd-java-agent.jar"
+  },
+  {
+    "name": "DD_API_KEY",
+    "value": "<DATADOG_API_KEY>"
+  },
+  {
+    "name": "DD_SITE",
+    "value": "datadoghq.com"
+  },
+  {
+    "name": "DD_SERVICE",
+    "value": "my-spring-service"
+  },
+  {
+    "name": "DD_ENV",
+    "value": "prod"
+  },
+  {
+    "name": "DD_VERSION",
+    "value": "1.0.0"
+  },
+  {
+    "name": "DD_TRACE_ENABLED",
+    "value": "true"
+  },
+  {
+    "name": "DD_TRACE_AGENT_URL",
+    "value": "https://trace.agent.datadoghq.com"
+  }
+]
