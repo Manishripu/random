@@ -1,0 +1,29 @@
+@Component
+public class AuthUserHeaderFilter extends OncePerRequestFilter {
+
+    @Override
+    protected void doFilterInternal(
+            HttpServletRequest request,
+            HttpServletResponse response,
+            FilterChain filterChain
+    ) throws ServletException, IOException {
+
+        String authUserHeader = request.getHeader("X-AUTH-USER");
+
+        if (authUserHeader != null) {
+            AuthUser user = parse(authUserHeader);
+
+            UsernamePasswordAuthenticationToken authentication =
+                    new UsernamePasswordAuthenticationToken(
+                            user,
+                            null,
+                            user.getAuthorities()
+                    );
+
+            SecurityContextHolder.getContext()
+                                 .setAuthentication(authentication);
+        }
+
+        filterChain.doFilter(request, response);
+    }
+}
