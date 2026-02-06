@@ -1,0 +1,70 @@
+@Service
+public class MultipartProxyService {
+
+    private final RestTemplate restTemplate;
+
+    public MultipartProxyService(RestTemplate restTemplate) {
+        this.restTemplate = restTemplate;
+    }
+
+    public ResponseEntity<byte[]> forward(HttpServletRequest request) throws Exception {
+
+        MultiValueMap<String, Object> body = new LinkedMultiValueMap<>();
+
+        // 1️⃣ Forward all form params (any name, any count)
+        request.getParameterMap().forEach((key, values) -> {
+            for (String value : values) {
+                body.add(key, value);
+            }
+        });
+
+        // 2️⃣ Forward all files (any field name, any count)
+        if (request instanceof MultipartHttpServletRequest multipartRequest) {
+
+            multipartRequest.getMultiFileMap().forEach((key, files) -> {
+                for (MultipartFile file : files) {
+                    body.add(key, toResource(file));
+                }
+            });
+        }
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.MULTIPART_FORM_DATA);
+
+        // 3️⃣ Forward headers (auth, trace-id, etc.)
+        copyHeaders(request, headers);
+
+        HttpEntity<MultiValueMap<String, Object>> entity =
+                new HttpEntity<>(body, headers);
+
+        return restTemplate.exchange(
+                "http://target-service/api/upload",
+                HttpMethod.POST,
+                entity,
+                byte[].class
+        );
+    }
+
+    private Resource toResource(MultipartFile file) throws IOException {
+        return new ByteArrayResource(file.getBytes()) {
+            @Override
+            public String getFilename() {
+                return file.getOriginalFilename();
+            }
+        };
+    }
+
+    private void copyHeaders(HttpServletRequest request, HttpHeaders headers) {
+        Enumeration<String> headerNames = request.getHeaderNames();
+        while (headerNames.hasMoreElements()) {
+            String name = headerNames.nextElement();
+
+            // Skip content-length & content-type (RestTemplate recalculates)
+            if (!HttpHeaders.CONTENT_LENGTH.equalsIgnoreCase(name)
+                && !HttpHeaders.CONTENT_TYPE.equalsIgnoreCase(name)) {
+
+                headers.add(name, request.getHeader(name));
+            }
+        }
+    }
+}
