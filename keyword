@@ -1,0 +1,16 @@
+public class EndGreaterThanStartKeyword extends AbstractKeyword {
+
+    public EndGreaterThanStartKeyword() {
+        super("endGreaterThanStart");
+    }
+
+    @Override
+    public KeywordValidator newValidator(
+            SchemaLocation schemaLocation,
+            JsonNode schemaNode,
+            JsonSchema parentSchema,
+            ValidationContext validationContext) {
+
+        return new EndGreaterThanStartValidator(schemaLocation, this);
+    }
+}
