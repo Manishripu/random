@@ -1,0 +1,11 @@
+public class MyCustomKeyword implements Keyword {
+    @Override
+    public String getValue() {
+        return "myCustomKey"; // This is the keyword name used in your JSON schema
+    }
+
+    @Override
+    public JsonValidator newValidator(SchemaLocation schemaLocation, JsonNodePath evaluationPath, JsonNode schemaNode, JsonSchema parentSchema, ValidationContext validationContext) {
+        return new MyCustomValidator(schemaLocation, evaluationPath, schemaNode, parentSchema, validationContext);
+    }
+}
