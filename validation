@@ -1,20 +1,47 @@
 import com.fasterxml.jackson.databind.JsonNode;
 import com.networknt.schema.*;
-import java.util.Collections;
+
+import java.util.HashSet;
 import java.util.Set;
 
-public class MyCustomValidator extends AbstractJsonValidator {
-    public MyCustomValidator(SchemaLocation schemaLocation, JsonNodePath evaluationPath, JsonNode schemaNode, JsonSchema parentSchema, ValidationContext validationContext) {
-        super(schemaLocation, evaluationPath, schemaNode, parentSchema, validationContext);
+public class EndGreaterThanStartValidator implements KeywordValidator {
+
+    private final SchemaLocation schemaLocation;
+
+    public EndGreaterThanStartValidator(SchemaLocation schemaLocation) {
+        this.schemaLocation = schemaLocation;
     }
 
     @Override
-    public Set<ValidationMessage> validate(ExecutionContext executionContext, JsonNode node, JsonNode rootNode, JsonNodePath at) {
-        // Your custom logic here
-        String expectedValue = schemaNode.asText();
-        if (!node.asText().equals(expectedValue)) {
-            return Collections.singleton(message("customError", "Value must be " + expectedValue));
+    public Set<ValidationMessage> validate(
+            JsonNode node,
+            JsonNode rootNode,
+            SchemaLocation schemaLocation) {
+
+        Set<ValidationMessage> errors = new HashSet<>();
+
+        if (!node.isObject()) {
+            return errors;
         }
-        return Collections.emptySet();
+
+        JsonNode startNode = node.get("start");
+        JsonNode endNode = node.get("end");
+
+        if (startNode != null && endNode != null
+                && startNode.isNumber() && endNode.isNumber()) {
+
+            if (endNode.asDouble() <= startNode.asDouble()) {
+
+                errors.add(
+                    ValidationMessage.builder()
+                        .schemaLocation(this.schemaLocation)
+                        .type("endGreaterThanStart")
+                        .message("end must be greater than start")
+                        .build()
+                );
+            }
+        }
+
+        return errors;
     }
 }
