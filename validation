@@ -1,0 +1,20 @@
+import com.fasterxml.jackson.databind.JsonNode;
+import com.networknt.schema.*;
+import java.util.Collections;
+import java.util.Set;
+
+public class MyCustomValidator extends AbstractJsonValidator {
+    public MyCustomValidator(SchemaLocation schemaLocation, JsonNodePath evaluationPath, JsonNode schemaNode, JsonSchema parentSchema, ValidationContext validationContext) {
+        super(schemaLocation, evaluationPath, schemaNode, parentSchema, validationContext);
+    }
+
+    @Override
+    public Set<ValidationMessage> validate(ExecutionContext executionContext, JsonNode node, JsonNode rootNode, JsonNodePath at) {
+        // Your custom logic here
+        String expectedValue = schemaNode.asText();
+        if (!node.asText().equals(expectedValue)) {
+            return Collections.singleton(message("customError", "Value must be " + expectedValue));
+        }
+        return Collections.emptySet();
+    }
+}
