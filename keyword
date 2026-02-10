@@ -1,7 +1,12 @@
+import com.fasterxml.jackson.databind.JsonNode;
+import com.networknt.schema.*;
+
 public class EndGreaterThanStartKeyword extends AbstractKeyword {
 
+    public static final String NAME = "endGreaterThanStart";
+
     public EndGreaterThanStartKeyword() {
-        super("endGreaterThanStart");
+        super(NAME);
     }
 
     @Override
@@ -11,6 +16,6 @@ public class EndGreaterThanStartKeyword extends AbstractKeyword {
             JsonSchema parentSchema,
             ValidationContext validationContext) {
 
-        return new EndGreaterThanStartValidator(schemaLocation, this);
+        return new EndGreaterThanStartValidator(schemaLocation);
     }
 }
