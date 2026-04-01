@@ -1,0 +1,29 @@
+import com.fasterxml.jackson.databind.ObjectMapper;
+import io.swagger.v3.oas.models.media.Schema;
+import org.springdoc.core.customizers.OpenApiCustomizer;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.core.io.ClassPathResource;
+
+@Configuration
+public class OpenApiConfig {
+
+    @Bean
+    public OpenApiCustomizer customSchema(ObjectMapper mapper) {
+        return openApi -> {
+            try {
+                ClassPathResource resource = new ClassPathResource("schema/user.json");
+
+                Schema<?> schema = mapper.readValue(
+                        resource.getInputStream(),
+                        Schema.class
+                );
+
+                openApi.getComponents().addSchemas("UserRequest", schema);
+
+            } catch (Exception e) {
+                throw new RuntimeException("Failed to load schema", e);
+            }
+        };
+    }
+}
