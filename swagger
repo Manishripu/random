@@ -1,0 +1,18 @@
+String[] schemaFiles = {
+    "schema/user.json",
+    "schema/order.json"
+};
+
+for (String file : schemaFiles) {
+    ClassPathResource resource = new ClassPathResource(file);
+
+    Schema<?> schema = mapper.readValue(
+            resource.getInputStream(),
+            Schema.class
+    );
+
+    String schemaName = file.substring(file.lastIndexOf("/") + 1)
+                            .replace(".json", "");
+
+    openApi.getComponents().addSchemas(schemaName, schema);
+}
