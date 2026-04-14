@@ -1,21 +1,30 @@
-AI-Driven Predictive MFE Orchestration Plan
-1. System Overview
+ 
+
+---
+
+# AI-Driven Predictive MFE Orchestration Plan
+
+## 1. System Overview
 This plan transforms a standard Shell + Remote MFE architecture into an intelligent system that anticipates user actions.
+* **Intelligence:** TensorFlow.js running in the browser.
+* **Orchestration:** Angular Shell + Module Federation.
+* **Persistence:** Hybrid storage (IndexedDB for local, Spring Boot + DB for cloud).
 
-Intelligence: TensorFlow.js running in the browser.
+---
 
-Orchestration: Angular Shell + Module Federation.
-
-Persistence: Hybrid storage (IndexedDB for local, Spring Boot + DB for cloud).
-
-2. Core Architecture
+## 2. Core Architecture
 The system uses a shared common layer to host the singleton "Brain" that observes navigation and pre-fetches resources.
 
-3. Implementation Code
-A. The Predictive Engine (Common Library)
+
+
+---
+
+## 3. Implementation Code
+
+### A. The Predictive Engine (Common Library)
 This service manages the Neural Network, training, and prediction.
 
-TypeScript
+```typescript
 // projects/common/src/lib/predictive-api.service.ts
 import * as tf from '@tensorflow/tfjs';
 import { Injectable } from '@angular/core';
@@ -85,10 +94,12 @@ export class PredictiveApiService {
     }));
   }
 }
-B. Shared Data Service (Common Library)
-Uses shareReplay(1) to ensure speculative fetches aren't wasted.
+```
 
-TypeScript
+### B. Shared Data Service (Common Library)
+Uses `shareReplay(1)` to ensure speculative fetches aren't wasted.
+
+```typescript
 // projects/common/src/lib/shared-data.service.ts
 @Injectable({ providedIn: 'root' })
 export class SharedDataService {
@@ -105,8 +116,10 @@ export class SharedDataService {
     return this.cache.get(endpoint)!;
   }
 }
-C. The Intent Directive (Common Library)
-TypeScript
+```
+
+### C. The Intent Directive (Common Library)
+```typescript
 // projects/common/src/lib/predictive-intent.directive.ts
 @Directive({ selector: '[aiPredictive]' })
 export class AiPredictiveDirective {
@@ -123,8 +136,10 @@ export class AiPredictiveDirective {
     }
   }
 }
-D. Global Training (Shell App)
-TypeScript
+```
+
+### D. Global Training (Shell App)
+```typescript
 // apps/shell/src/app/app.component.ts
 export class AppComponent {
   constructor(private router: Router, private ai: PredictiveApiService) {
@@ -136,11 +151,12 @@ export class AppComponent {
     });
   }
 }
-4. Execution Roadmap
-Setup: Install @tensorflow/tfjs.
+```
 
-Module Federation: Shared PredictiveApiService as a singleton in webpack.config.js.
+---
 
-Backend: Create Spring Boot endpoint /api/v1/ai/model-sync to store the JSON artifacts.
-
-UX: Apply aiPredictive directive to main navigation links.
+## 4. Execution Roadmap
+1.  **Setup:** Install `@tensorflow/tfjs`.
+2.  **Module Federation:** Shared `PredictiveApiService` as a `singleton` in `webpack.config.js`.
+3.  **Backend:** Create Spring Boot endpoint `/api/v1/ai/model-sync` to store the JSON artifacts.
+4.  **UX:** Apply `aiPredictive` directive to main navigation links.
