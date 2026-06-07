@@ -1,1 +1,1879 @@
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AWS ↔ GCP Master Cheat Sheet</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&family=Sora:wght@300;400;600;700;800&display=swap');
 
+:root {
+  --aws: #FF9900;
+  --aws-dim: rgba(255,153,0,0.15);
+  --aws-border: rgba(255,153,0,0.3);
+  --gcp-blue: #4285F4;
+  --gcp-green: #34A853;
+  --gcp-red: #EA4335;
+  --gcp-yellow: #FBBC05;
+  --gcp-dim: rgba(66,133,244,0.15);
+  --gcp-border: rgba(66,133,244,0.3);
+  --bg: #080a0f;
+  --bg2: #0d1017;
+  --surface: #111520;
+  --surface2: #171d2e;
+  --surface3: #1d2438;
+  --border: #222840;
+  --border2: #2a3250;
+  --text: #dde4f5;
+  --text2: #9aa3c2;
+  --muted: #5a6280;
+  --exam-tag: #f97316;
+  --danger: #ef4444;
+  --success: #22c55e;
+  --warn: #eab308;
+  --info: #38bdf8;
+  --accent: #818cf8;
+}
+
+*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+html { scroll-behavior: smooth; }
+
+body {
+  font-family: 'Sora', sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+/* ── GRID BACKGROUND ── */
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background-image:
+    linear-gradient(rgba(66,133,244,0.03) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255,153,0,0.03) 1px, transparent 1px);
+  background-size: 40px 40px;
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* ── HERO ── */
+.hero {
+  position: relative;
+  z-index: 1;
+  text-align: center;
+  padding: 3.5rem 1rem 2rem;
+  overflow: hidden;
+}
+
+.hero-glow {
+  position: absolute;
+  top: -60px; left: 50%;
+  transform: translateX(-50%);
+  width: 700px; height: 300px;
+  background: radial-gradient(ellipse, rgba(66,133,244,0.12) 0%, rgba(255,153,0,0.08) 50%, transparent 70%);
+  pointer-events: none;
+}
+
+.hero-eyebrow {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.7rem;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin-bottom: 1rem;
+}
+
+.hero h1 {
+  font-size: clamp(2rem, 5vw, 3.8rem);
+  font-weight: 800;
+  line-height: 1.05;
+  letter-spacing: -2px;
+  margin-bottom: 0.75rem;
+}
+
+.hero h1 .aws-word {
+  color: var(--aws);
+  text-shadow: 0 0 40px rgba(255,153,0,0.4);
+}
+.hero h1 .arrow {
+  color: var(--muted);
+  margin: 0 0.2em;
+  font-weight: 300;
+}
+.hero h1 .gcp-word {
+  background: linear-gradient(135deg, var(--gcp-blue) 0%, var(--gcp-green) 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  filter: drop-shadow(0 0 30px rgba(66,133,244,0.4));
+}
+
+.hero-sub {
+  font-size: 0.95rem;
+  color: var(--text2);
+  max-width: 540px;
+  margin: 0 auto 2rem;
+  line-height: 1.6;
+  font-weight: 300;
+}
+
+/* ── EXAM BADGES ── */
+.exam-badges {
+  display: flex;
+  justify-content: center;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+  margin-bottom: 2rem;
+}
+
+.exam-badge {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  padding: 0.4rem 1rem;
+  border-radius: 999px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.7rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  border: 1px solid;
+}
+
+.exam-badge.sap { background: rgba(255,153,0,0.08); border-color: var(--aws-border); color: var(--aws); }
+.exam-badge.pca { background: rgba(66,133,244,0.08); border-color: var(--gcp-border); color: var(--gcp-blue); }
+.exam-badge.hot { background: rgba(249,115,22,0.1); border-color: rgba(249,115,22,0.35); color: var(--exam-tag); }
+
+/* ── LEGEND ── */
+.legend-bar {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 1.5rem;
+  flex-wrap: wrap;
+  padding: 0.9rem 1.5rem;
+  background: var(--surface);
+  border-top: 1px solid var(--border);
+  border-bottom: 1px solid var(--border);
+  font-size: 0.75rem;
+  color: var(--text2);
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  backdrop-filter: blur(12px);
+  background: rgba(17,21,32,0.92);
+}
+
+.legend-item { display: flex; align-items: center; gap: 0.4rem; }
+
+/* ── NAV PILLS ── */
+.nav-pills {
+  display: flex;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  padding: 1.2rem 1rem;
+  position: relative;
+  z-index: 1;
+}
+
+.nav-pill {
+  padding: 0.3rem 0.85rem;
+  border-radius: 999px;
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-decoration: none;
+  border: 1px solid var(--border2);
+  color: var(--text2);
+  background: var(--surface);
+  transition: all 0.2s;
+  cursor: pointer;
+}
+.nav-pill:hover { border-color: var(--accent); color: var(--accent); background: rgba(129,140,248,0.08); }
+
+/* ── MAIN LAYOUT ── */
+.wrapper {
+  max-width: 1300px;
+  margin: 0 auto;
+  padding: 0 1rem 5rem;
+  position: relative;
+  z-index: 1;
+}
+
+/* ── SECTION ── */
+.section {
+  margin-bottom: 3rem;
+}
+
+.section-head {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 1rem;
+  padding: 0.8rem 1.2rem;
+  background: var(--surface2);
+  border: 1px solid var(--border2);
+  border-radius: 10px 10px 0 0;
+  border-bottom: 2px solid var(--accent);
+}
+
+.section-emoji { font-size: 1.3rem; }
+
+.section-title {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.8rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: var(--accent);
+}
+
+.section-count {
+  margin-left: auto;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.65rem;
+  color: var(--muted);
+  background: var(--surface3);
+  padding: 0.2rem 0.55rem;
+  border-radius: 4px;
+}
+
+.exam-hot {
+  margin-left: 0.5rem;
+  font-size: 0.62rem;
+  padding: 0.15rem 0.45rem;
+  background: rgba(249,115,22,0.12);
+  border: 1px solid rgba(249,115,22,0.3);
+  color: var(--exam-tag);
+  border-radius: 4px;
+  font-family: 'JetBrains Mono', monospace;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+/* ── TABLE ── */
+.tbl-wrap {
+  overflow-x: auto;
+  border: 1px solid var(--border2);
+  border-top: none;
+  border-radius: 0 0 10px 10px;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.82rem;
+}
+
+thead th {
+  padding: 0.75rem 1rem;
+  background: var(--surface3);
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.68rem;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  text-align: left;
+  white-space: nowrap;
+  border-bottom: 1px solid var(--border2);
+  position: sticky;
+  top: 52px;
+  z-index: 5;
+}
+
+thead th:nth-child(1) { color: var(--muted); width: 13%; }
+thead th:nth-child(2) { color: var(--aws); width: 24%; }
+thead th:nth-child(3) { color: var(--gcp-blue); width: 24%; }
+thead th:nth-child(4) { color: var(--text2); width: 20%; }
+thead th:nth-child(5) { color: var(--exam-tag); width: 19%; }
+
+tbody tr { background: var(--surface); transition: background 0.12s; }
+tbody tr:nth-child(even) { background: var(--bg2); }
+tbody tr:hover { background: var(--surface2); }
+
+td {
+  padding: 0.85rem 1rem;
+  vertical-align: top;
+  border-top: 1px solid var(--border);
+  line-height: 1.55;
+}
+
+td:first-child {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.68rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--muted);
+  white-space: nowrap;
+}
+
+/* ── CHIPS ── */
+.chip {
+  display: inline-block;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.72rem;
+  font-weight: 700;
+  padding: 0.18rem 0.5rem;
+  border-radius: 5px;
+  margin-bottom: 0.3rem;
+  white-space: nowrap;
+}
+.chip-aws { background: var(--aws-dim); color: var(--aws); border: 1px solid var(--aws-border); }
+.chip-gcp { background: var(--gcp-dim); color: #6fa8f7; border: 1px solid var(--gcp-border); }
+
+.chip-sub {
+  font-size: 0.72rem;
+  color: var(--text2);
+  margin-top: 0.2rem;
+  line-height: 1.45;
+}
+
+/* ── TAGS ── */
+.tag {
+  display: inline-block;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.6rem;
+  font-weight: 700;
+  padding: 0.12rem 0.4rem;
+  border-radius: 4px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  vertical-align: middle;
+  white-space: nowrap;
+}
+.t-match   { background: rgba(34,197,94,0.12);  color: #22c55e; border: 1px solid rgba(34,197,94,0.3);  }
+.t-similar { background: rgba(234,179,8,0.12);  color: #eab308; border: 1px solid rgba(234,179,8,0.3);  }
+.t-diff    { background: rgba(239,68,68,0.12);  color: #f87171; border: 1px solid rgba(239,68,68,0.3);  }
+.t-gcponly { background: rgba(66,133,244,0.12); color: #6fa8f7; border: 1px solid rgba(66,133,244,0.3); }
+.t-awsonly { background: rgba(255,153,0,0.12);  color: var(--aws); border: 1px solid var(--aws-border); }
+
+/* ── NOTE CELL ── */
+.nc { font-size: 0.78rem; color: var(--text2); line-height: 1.55; }
+.nc strong { color: var(--text); font-weight: 600; }
+.nc code {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.7rem;
+  background: var(--surface3);
+  padding: 0.1rem 0.35rem;
+  border-radius: 3px;
+  color: var(--info);
+}
+
+/* ── EXAM CELL ── */
+.ec {
+  font-size: 0.75rem;
+  color: #fbbf24;
+  line-height: 1.55;
+}
+.ec .tip {
+  display: block;
+  margin-top: 0.3rem;
+  padding: 0.35rem 0.6rem;
+  background: rgba(251,191,36,0.06);
+  border-left: 2px solid rgba(251,191,36,0.4);
+  border-radius: 0 4px 4px 0;
+  font-size: 0.71rem;
+  color: #d97706;
+}
+.ec .gotcha {
+  display: block;
+  margin-top: 0.3rem;
+  padding: 0.35rem 0.6rem;
+  background: rgba(239,68,68,0.06);
+  border-left: 2px solid rgba(239,68,68,0.4);
+  border-radius: 0 4px 4px 0;
+  font-size: 0.71rem;
+  color: #f87171;
+}
+.ec .green {
+  display: block;
+  margin-top: 0.3rem;
+  padding: 0.35rem 0.6rem;
+  background: rgba(34,197,94,0.06);
+  border-left: 2px solid rgba(34,197,94,0.3);
+  border-radius: 0 4px 4px 0;
+  font-size: 0.71rem;
+  color: #86efac;
+}
+
+/* ── FOOTER ── */
+.footer {
+  text-align: center;
+  padding: 2rem 1rem;
+  color: var(--muted);
+  font-size: 0.72rem;
+  border-top: 1px solid var(--border);
+  position: relative;
+  z-index: 1;
+}
+
+/* ── RESPONSIVE ── */
+@media (max-width: 768px) {
+  td, th { padding: 0.6rem 0.7rem; }
+  .chip { font-size: 0.65rem; }
+  .nc, .ec { font-size: 0.72rem; }
+  thead th:nth-child(5) { display: none; }
+  td:last-child { display: none; }
+}
+
+/* ── ANIMATIONS ── */
+@keyframes fadeSlideUp {
+  from { opacity: 0; transform: translateY(20px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.section { animation: fadeSlideUp 0.4s ease both; }
+.section:nth-child(1)  { animation-delay: 0.05s; }
+.section:nth-child(2)  { animation-delay: 0.08s; }
+.section:nth-child(3)  { animation-delay: 0.11s; }
+.section:nth-child(4)  { animation-delay: 0.14s; }
+.section:nth-child(5)  { animation-delay: 0.17s; }
+.section:nth-child(6)  { animation-delay: 0.2s;  }
+.section:nth-child(7)  { animation-delay: 0.23s; }
+.section:nth-child(8)  { animation-delay: 0.26s; }
+.section:nth-child(9)  { animation-delay: 0.29s; }
+.section:nth-child(10) { animation-delay: 0.32s; }
+.section:nth-child(11) { animation-delay: 0.35s; }
+.section:nth-child(12) { animation-delay: 0.38s; }
+.section:nth-child(13) { animation-delay: 0.41s; }
+.section:nth-child(14) { animation-delay: 0.44s; }
+.section:nth-child(15) { animation-delay: 0.47s; }
+</style>
+</head>
+<body>
+
+<!-- HERO -->
+<div class="hero">
+  <div class="hero-glow"></div>
+  <p class="hero-eyebrow">Professional Exam Master Reference</p>
+  <h1>
+    <span class="aws-word">AWS</span>
+    <span class="arrow">⇄</span>
+    <span class="gcp-word">GCP</span>
+  </h1>
+  <p class="hero-sub">Every service. Every gotcha. Built for SAP-C02 &amp; GCP Professional Cloud Architect — know one cloud, understand the other.</p>
+  <div class="exam-badges">
+    <span class="exam-badge sap">✦ AWS SAP-C02 Solutions Architect Pro</span>
+    <span class="exam-badge pca">✦ GCP Professional Cloud Architect v6.1</span>
+    <span class="exam-badge hot">🔥 Exam Hot Topics Highlighted</span>
+  </div>
+</div>
+
+<!-- STICKY LEGEND -->
+<div class="legend-bar">
+  <span class="legend-item"><span class="tag t-match">≈ match</span> Nearly identical</span>
+  <span class="legend-item"><span class="tag t-similar">~ similar</span> Same concept, key diffs</span>
+  <span class="legend-item"><span class="tag t-diff">≠ differs</span> Different approach</span>
+  <span class="legend-item"><span class="tag t-awsonly">AWS only</span> No GCP equiv</span>
+  <span class="legend-item"><span class="tag t-gcponly">GCP only</span> No AWS equiv</span>
+  <span style="color:var(--exam-tag);font-size:0.72rem;">🔥 = Frequently tested on exams</span>
+</div>
+
+<!-- NAV PILLS -->
+<div class="nav-pills">
+  <a class="nav-pill" href="#compute">⚙ Compute</a>
+  <a class="nav-pill" href="#containers">🐳 Containers</a>
+  <a class="nav-pill" href="#storage">🗄 Storage</a>
+  <a class="nav-pill" href="#databases">🗃 Databases</a>
+  <a class="nav-pill" href="#networking">🌐 Networking</a>
+  <a class="nav-pill" href="#security">🔐 Security &amp; IAM</a>
+  <a class="nav-pill" href="#governance">🏛 Governance</a>
+  <a class="nav-pill" href="#migration">🚚 Migration</a>
+  <a class="nav-pill" href="#ha">⚡ HA &amp; DR</a>
+  <a class="nav-pill" href="#messaging">📨 Messaging</a>
+  <a class="nav-pill" href="#devops">🛠 DevOps &amp; IaC</a>
+  <a class="nav-pill" href="#monitoring">📊 Monitoring</a>
+  <a class="nav-pill" href="#data">📈 Analytics</a>
+  <a class="nav-pill" href="#ai">🤖 AI &amp; ML</a>
+  <a class="nav-pill" href="#hybrid">🔗 Hybrid &amp; Edge</a>
+  <a class="nav-pill" href="#cost">💰 Cost Optimization</a>
+  <a class="nav-pill" href="#concepts">🌍 Key Concepts</a>
+</div>
+
+<div class="wrapper">
+
+<!-- ══════════════════════════════════════════════════════ -->
+<!-- 1. COMPUTE -->
+<!-- ══════════════════════════════════════════════════════ -->
+<div class="section" id="compute">
+  <div class="section-head">
+    <span class="section-emoji">⚙️</span>
+    <span class="section-title">Compute</span>
+    <span class="exam-hot">🔥 Heavy on exams</span>
+    <span class="section-count">8 services</span>
+  </div>
+  <div class="tbl-wrap">
+    <table>
+      <thead><tr><th>Category</th><th>☁ AWS</th><th>🌐 GCP</th><th>Key Differences</th><th>🔥 Exam Tips</th></tr></thead>
+      <tbody>
+        <tr>
+          <td>Virtual Machines</td>
+          <td><span class="chip chip-aws">EC2</span><div class="chip-sub">Elastic Compute Cloud<br>Instance families: t3/m5/c5/r5/p3</div></td>
+          <td><span class="chip chip-gcp">Compute Engine (GCE)</span><div class="chip-sub">Machine types: e2/n2/c2/m2/a2<br>Preemptible + Spot VMs</div></td>
+          <td class="nc"><span class="tag t-similar">~ similar</span><br>GCP has <strong>Sustained Use Discounts (SUD)</strong> — automatic, no commitment. AWS needs Reserved Instances or Savings Plans.<br><br>GCP <strong>Custom Machine Types</strong> = set exact vCPU+RAM. AWS has no equivalent (fixed families only).</td>
+          <td class="ec">Pick instance families by workload: compute (c), memory (r/m2), GPU (p/g), storage (i/d).<span class="tip">GCP e2 = burstable (like t3). n2 = standard. c2 = compute-optimized. m2 = memory-optimized.</span><span class="gotcha">AWS Spot = GCP Spot/Preemptible. Both can be reclaimed with 2min notice.</span></td>
+        </tr>
+        <tr>
+          <td>Auto Scaling</td>
+          <td><span class="chip chip-aws">Auto Scaling Groups (ASG)</span><div class="chip-sub">Target tracking, step, scheduled, predictive scaling</div></td>
+          <td><span class="chip chip-gcp">Managed Instance Groups (MIG)</span><div class="chip-sub">Autoscaler: CPU, LB capacity, custom metrics, schedules</div></td>
+          <td class="nc"><span class="tag t-similar">~ similar</span><br>AWS has <strong>Predictive Scaling</strong> using ML. GCP uses schedule-based scaling + custom metric.<br><br>AWS ASG integrates with ELB health checks. GCP MIG integrates with Cloud Load Balancing.<br><br>AWS <strong>Launch Templates</strong> (preferred) vs Launch Configs (legacy).</td>
+          <td class="ec"><span class="gotcha">ASG exam trap: scale-in protection, termination policies (OldestInstance, ClosestToNextInstanceHour).</span><span class="tip">GCP MIG stateful vs stateless — stateful preserves disk and IP on restart.</span></td>
+        </tr>
+        <tr>
+          <td>Serverless Compute</td>
+          <td><span class="chip chip-aws">Lambda</span><div class="chip-sub">15min timeout, 10GB RAM, 512MB–10GB /tmp, Layers, Extensions</div></td>
+          <td><span class="chip chip-gcp">Cloud Functions (Gen2)</span><div class="chip-sub">60min timeout, 32GB RAM, runs on Cloud Run internally</div></td>
+          <td class="nc"><span class="tag t-similar">~ similar</span><br>Lambda has <strong>cold starts</strong> — mitigate with Provisioned Concurrency. GCP Gen2 = warmer startups.<br><br>Lambda <strong>Reserved Concurrency</strong> (cap) vs <strong>Provisioned Concurrency</strong> (pre-warm).</td>
+          <td class="ec"><span class="gotcha">Lambda concurrency limit = 1000 per region (soft). Reserved concurrency throttles that function. Provisioned = always-warm instances, costs more.</span><span class="tip">GCP Cloud Functions Gen2 supports longer timeout (60min) — better for data pipelines.</span></td>
+        </tr>
+        <tr>
+          <td>PaaS App Hosting</td>
+          <td><span class="chip chip-aws">Elastic Beanstalk</span><div class="chip-sub">Web + Worker tiers, Blue/Green deployments, .ebextensions</div></td>
+          <td><span class="chip chip-gcp">App Engine</span><div class="chip-sub">Standard (sandbox, fast) vs Flexible (Docker, slower)</div></td>
+          <td class="nc"><span class="tag t-similar">~ similar</span><br>App Engine <strong>Standard</strong> is heavily sandboxed, zero cold-start, cheapest. <strong>Flexible</strong> = Docker on GCE VMs.<br><br>Beanstalk is more flexible but you manage the underlying EC2/ALB config. Neither is truly serverless.</td>
+          <td class="ec"><span class="tip">App Engine traffic splitting: gradual canary releases by %. Beanstalk: swap environment URLs for Blue/Green.</span><span class="gotcha">App Engine Flexible ≠ fully managed — you still pay for VMs even at zero traffic.</span></td>
+        </tr>
+        <tr>
+          <td>Batch Compute</td>
+          <td><span class="chip chip-aws">AWS Batch</span><div class="chip-sub">Managed job queues, Fargate or EC2, spot support</div></td>
+          <td><span class="chip chip-gcp">Cloud Batch</span><div class="chip-sub">Job queues on GCE/Spot VMs, NFS support</div></td>
+          <td class="nc"><span class="tag t-match">≈ match</span><br>Both schedule batch jobs on managed compute. AWS Batch uses ECS/Fargate underneath. GCP Batch uses MIGs.</td>
+          <td class="ec"><span class="tip">Use Spot/Preemptible VMs for cost savings on fault-tolerant batch jobs.</span></td>
+        </tr>
+        <tr>
+          <td>HPC</td>
+          <td><span class="chip chip-aws">HPC on EC2</span><div class="chip-sub">Placement Groups (cluster), EFA networking, Nitro system</div></td>
+          <td><span class="chip chip-gcp">HPC VM + A3 Mega</span><div class="chip-sub">GPUDirect RDMA, AI Hypercomputer</div></td>
+          <td class="nc"><span class="tag t-similar">~ similar</span><br>AWS Cluster Placement Groups = lowest latency between instances. EFA = high-bandwidth MPI networking.<br><br>GCP AI Hypercomputer = purpose-built for large model training workloads.</td>
+          <td class="ec"><span class="gotcha">Cluster Placement Groups can't span AZs. Spread PGs max 7 instances per AZ. Partition PGs are for large distributed workloads (Hadoop, Cassandra).</span></td>
+        </tr>
+        <tr>
+          <td>VM Import/Export</td>
+          <td><span class="chip chip-aws">VM Import/Export</span><div class="chip-sub">VMware, Hyper-V, VHD → AMI</div></td>
+          <td><span class="chip chip-gcp">Migrate to VMs</span><div class="chip-sub">VMware, AWS, Azure → GCE</div></td>
+          <td class="nc"><span class="tag t-similar">~ similar</span><br>GCP's Migrate to VMs (formerly Velostrata) streams workloads while running. AWS requires full image import.</td>
+          <td class="ec"><span class="tip">GCP Migrate to VMs = continuous replication before cutover, minimizing downtime.</span></td>
+        </tr>
+        <tr>
+          <td>Spot / Preemptible</td>
+          <td><span class="chip chip-aws">EC2 Spot Instances</span><div class="chip-sub">Spot Fleet, Spot capacity pools, 2min warning</div></td>
+          <td><span class="chip chip-gcp">Spot VMs + Preemptible</span><div class="chip-sub">Preemptible max 24hr, Spot = similar to AWS Spot</div></td>
+          <td class="nc"><span class="tag t-similar">~ similar</span><br>AWS Spot Fleet can mix instance types to maintain capacity. GCP Spot VMs replaced Preemptible (no 24hr limit).<br><br>Both: 60–90% discount vs on-demand.</td>
+          <td class="ec"><span class="gotcha">Preemptible VMs: max 24 hours runtime — not suitable for long-running jobs. Spot VMs removed this limit.</span><span class="tip">AWS Spot: use Capacity-Optimized allocation strategy for lowest interruption risk.</span></td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════ -->
+<!-- 2. CONTAINERS -->
+<!-- ══════════════════════════════════════════════════════ -->
+<div class="section" id="containers">
+  <div class="section-head">
+    <span class="section-emoji">🐳</span>
+    <span class="section-title">Containers &amp; Kubernetes</span>
+    <span class="exam-hot">🔥 Very heavy on exams</span>
+    <span class="section-count">7 services</span>
+  </div>
+  <div class="tbl-wrap">
+    <table>
+      <thead><tr><th>Category</th><th>☁ AWS</th><th>🌐 GCP</th><th>Key Differences</th><th>🔥 Exam Tips</th></tr></thead>
+      <tbody>
+        <tr>
+          <td>Managed Kubernetes</td>
+          <td><span class="chip chip-aws">EKS</span><div class="chip-sub">Elastic Kubernetes Service<br>Managed control plane, self-managed or managed node groups</div></td>
+          <td><span class="chip chip-gcp">GKE</span><div class="chip-sub">Google Kubernetes Engine<br>Standard vs Autopilot modes</div></td>
+          <td class="nc"><span class="tag t-similar">~ similar</span><br>GKE <strong>Autopilot</strong>: fully managed nodes, pay per pod (not node). AWS has no equivalent — Fargate is closest.<br><br>GKE created Kubernetes — tighter integration, faster version support. EKS lags slightly on K8s versions.</td>
+          <td class="ec"><span class="tip">GKE Autopilot = Google manages nodes, scaling, security hardening. Best for teams that don't want node ops.</span><span class="gotcha">EKS: you manage node groups (EC2 or Fargate). Control plane = $0.10/hr. Node groups = additional EC2 costs.</span></td>
+        </tr>
+        <tr>
+          <td>Serverless Containers</td>
+          <td><span class="chip chip-aws">AWS Fargate</span><div class="chip-sub">Serverless compute for ECS & EKS. No EC2 management.</div></td>
+          <td><span class="chip chip-gcp">Cloud Run</span><div class="chip-sub">Fully managed, scale-to-zero, HTTP/gRPC, request-based billing</div></td>
+          <td class="nc"><span class="tag t-similar">~ similar</span><br>Cloud Run scales to <strong>zero</strong> (no traffic = no cost). Fargate does not — ECS tasks must be running.<br><br>Cloud Run = HTTP-triggered serverless. Fargate = long-running services + batch tasks.</td>
+          <td class="ec"><span class="tip">Cloud Run = stateless HTTP workloads, microservices, APIs. Scales 0→N in seconds.</span><span class="gotcha">Fargate doesn't scale to zero. If you need scale-to-zero on AWS, use Lambda.</span></td>
+        </tr>
+        <tr>
+          <td>Container Orchestration</td>
+          <td><span class="chip chip-aws">ECS</span><div class="chip-sub">Elastic Container Service<br>EC2 launch type or Fargate. Task Definitions, Services.</div></td>
+          <td><span class="chip chip-gcp">Cloud Run + GKE</span><div class="chip-sub">No direct ECS equivalent. Cloud Run for simple; GKE for complex.</div></td>
+          <td class="nc"><span class="tag t-diff">≠ differs</span><br>ECS is AWS-proprietary (no K8s). GCP doesn't have an ECS equivalent — Cloud Run handles simpler workloads, GKE handles complex ones.<br><br>ECS <strong>Service Discovery</strong> via Cloud Map. GCP uses Cloud DNS + GKE Service.</td>
+          <td class="ec"><span class="tip">ECS Task = Pod. ECS Service = Deployment. ECS Cluster = cluster of EC2 or Fargate capacity.</span><span class="gotcha">ECS vs EKS: choose EKS for portability/standard K8s; ECS for simplicity on AWS-only workloads.</span></td>
+        </tr>
+        <tr>
+          <td>Container Registry</td>
+          <td><span class="chip chip-aws">ECR</span><div class="chip-sub">Elastic Container Registry<br>Private, lifecycle policies, image scanning</div></td>
+          <td><span class="chip chip-gcp">Artifact Registry</span><div class="chip-sub">Docker, Maven, npm, Python, Go packages. Replaces GCR.</div></td>
+          <td class="nc"><span class="tag t-similar">~ similar</span><br>Artifact Registry is multi-format (not just Docker). ECR is Docker-only. Both support image vulnerability scanning.<br><br>GCR (Container Registry) is deprecated → use Artifact Registry.</td>
+          <td class="ec"><span class="tip">ECR lifecycle policies: auto-expire old images by tag/count/age. Reduces storage costs.</span><span class="gotcha">ECR cross-account access requires resource-based policy on the repo, not IAM role alone.</span></td>
+        </tr>
+        <tr>
+          <td>Service Mesh</td>
+          <td><span class="chip chip-aws">AWS App Mesh</span><div class="chip-sub">Envoy proxy-based. Works with ECS, EKS, EC2.</div></td>
+          <td><span class="chip chip-gcp">Cloud Service Mesh</span><div class="chip-sub">Anthos Service Mesh (ASM). Istio-based. GKE-native.</div></td>
+          <td class="nc"><span class="tag t-similar">~ similar</span><br>GCP ASM is Istio-based (open standard). App Mesh uses Envoy but is AWS-proprietary.<br><br>Both: mTLS, traffic shaping, canary, observability.</td>
+          <td class="ec"><span class="tip">Service mesh for: mutual TLS between services, traffic splitting (canary), circuit breaking, retries without code changes.</span></td>
+        </tr>
+        <tr>
+          <td>Hybrid K8s</td>
+          <td><span class="chip chip-aws">EKS Anywhere</span><div class="chip-sub">Run EKS on-prem on VMware, bare metal, Nutanix</div></td>
+          <td><span class="chip chip-gcp">GKE on-prem / Anthos</span><div class="chip-sub">Anthos = unified multi-cloud K8s management</div></td>
+          <td class="nc"><span class="tag t-similar">~ similar</span><br>GCP Anthos manages K8s across GCP, on-prem, AWS, Azure from a single control plane. EKS Anywhere is AWS-only on-prem.</td>
+          <td class="ec"><span class="tip">Anthos Config Management: GitOps-style policy sync across all clusters. No AWS equivalent out of the box.</span></td>
+        </tr>
+        <tr>
+          <td>Serverless Jobs</td>
+          <td><span class="chip chip-aws">ECS Scheduled Tasks</span><div class="chip-sub">+ Lambda (event-driven)</div></td>
+          <td><span class="chip chip-gcp">Cloud Run Jobs</span><div class="chip-sub">Run-to-completion container workloads, cron via Cloud Scheduler</div></td>
+          <td class="nc"><span class="tag t-similar">~ similar</span><br>Cloud Run Jobs = containers that run to completion (not HTTP-serving). Equivalent to Fargate tasks triggered on schedule.</td>
+          <td class="ec"><span class="tip">Cloud Run Jobs + Cloud Scheduler = managed cron for containers. Great for ETL, report generation.</span></td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════ -->
+<!-- 3. STORAGE -->
+<!-- ══════════════════════════════════════════════════════ -->
+<div class="section" id="storage">
+  <div class="section-head">
+    <span class="section-emoji">🗄️</span>
+    <span class="section-title">Storage</span>
+    <span class="exam-hot">🔥 Heavy on exams</span>
+    <span class="section-count">9 services</span>
+  </div>
+  <div class="tbl-wrap">
+    <table>
+      <thead><tr><th>Category</th><th>☁ AWS</th><th>🌐 GCP</th><th>Key Differences</th><th>🔥 Exam Tips</th></tr></thead>
+      <tbody>
+        <tr>
+          <td>Object Storage</td>
+          <td><span class="chip chip-aws">S3</span><div class="chip-sub">Standard / IA / One Zone-IA / Glacier IR / Glacier / Deep Archive<br>Versioning, MFA Delete, Object Lock</div></td>
+          <td><span class="chip chip-gcp">Cloud Storage (GCS)</span><div class="chip-sub">Standard / Nearline / Coldline / Archive<br>Object Versioning, Retention Policies, WORM</div></td>
+          <td class="nc"><span class="tag t-match">≈ match</span><br><strong>S3 storage classes vs GCS:</strong><br>Standard ≈ Standard<br>S3-IA ≈ Nearline (30-day min)<br>Glacier IR ≈ Coldline (90-day min)<br>Glacier ≈ Archive (180-day min)<br><br>GCS Archive has <strong>no retrieval delay</strong> (unlike Glacier's 12hr). GCS charges <strong>retrieval fees</strong> instead.</td>
+          <td class="ec"><span class="gotcha">S3 Object Lock: Compliance mode = even root can't delete. Governance mode = privileged users can override.</span><span class="tip">GCS Lifecycle rules = S3 Lifecycle policies. Both transition objects between storage classes automatically.</span><span class="gotcha">S3 MFA Delete: requires MFA to delete versions. Only root account can enable it.</span></td>
+        </tr>
+        <tr>
+          <td>S3 Access Patterns</td>
+          <td><span class="chip chip-aws">S3 Access Points</span><div class="chip-sub">+ S3 Replication (CRR/SRR), Transfer Acceleration, Presigned URLs</div></td>
+          <td><span class="chip chip-gcp">GCS Signed URLs</span><div class="chip-sub">+ GCS Replication (Turbo), HMAC keys</div></td>
+          <td class="nc"><span class="tag t-similar">~ similar</span><br>S3 <strong>Transfer Acceleration</strong> uses CloudFront edge for faster uploads. GCS has no equivalent — use multi-part uploads.<br><br>S3 <strong>Requester Pays</strong>: bucket owner stores, requester pays transfer. GCS supports same feature.</td>
+          <td class="ec"><span class="gotcha">S3 CRR (Cross-Region Replication) requires versioning ON in both source and dest. Does NOT replicate existing objects — only new ones after rule creation.</span><span class="tip">S3 Presigned URL = GCS Signed URL. Both grant temp access without credentials.</span></td>
+        </tr>
+        <tr>
+          <td>Block Storage</td>
+          <td><span class="chip chip-aws">EBS</span><div class="chip-sub">gp3 (general), io2 Block Express (high IOPS), st1 (throughput HDD), sc1 (cold HDD)</div></td>
+          <td><span class="chip chip-gcp">Persistent Disk (PD)</span><div class="chip-sub">Balanced / SSD / Extreme / HDD. Hyperdisk (new gen).</div></td>
+          <td class="nc"><span class="tag t-similar">~ similar</span><br>EBS <strong>Multi-Attach</strong>: io1/io2 only, max 16 instances, same AZ. GCP PD <strong>multi-reader</strong> mode: up to 10 readers, read-only.<br><br>GCP <strong>Hyperdisk</strong>: decouple IOPS and throughput from size (provision independently). EBS gp3 also decouples IOPS from size now.</td>
+          <td class="ec"><span class="gotcha">EBS volumes are AZ-locked. To move: snapshot → create in new AZ. Encrypt unencrypted: snapshot → copy (encrypt) → new volume.</span><span class="tip">EBS gp3: baseline 3000 IOPS free. Can scale IOPS/throughput independently of size — cost-efficient upgrade from gp2.</span></td>
+        </tr>
+        <tr>
+          <td>File Storage (NFS)</td>
+          <td><span class="chip chip-aws">EFS</span><div class="chip-sub">Elastic File System. NFS 4.1. Multi-AZ. Auto-scales. Bursting or Provisioned throughput.</div></td>
+          <td><span class="chip chip-gcp">Filestore</span><div class="chip-sub">Basic / High Scale / Enterprise tiers. NFS v3.</div></td>
+          <td class="nc"><span class="tag t-similar">~ similar</span><br>EFS auto-scales storage (pay per GB used). Filestore requires provisioning a capacity tier upfront.<br><br>EFS <strong>Access Points</strong>: per-application mount points with enforced UID/GID.</td>
+          <td class="ec"><span class="tip">EFS use cases: shared home dirs, CMS media, container persistent volumes across AZs.</span><span class="gotcha">EFS Bursting: baseline throughput = 50KB/s per GB. Low utilization → use Provisioned Throughput mode.</span></td>
+        </tr>
+        <tr>
+          <td>High-Perf File (HPC)</td>
+          <td><span class="chip chip-aws">FSx for Lustre</span><div class="chip-sub">High-throughput parallel FS. Integrates with S3. Scratch or Persistent.</div></td>
+          <td><span class="chip chip-gcp">Parallelstore</span><div class="chip-sub">Intel DAOS-based. High-throughput for AI/ML and HPC.</div></td>
+          <td class="nc"><span class="tag t-similar">~ similar</span><br>FSx Lustre integrates natively with S3 (lazy-load or export). GCP Parallelstore integrates with GCS.</td>
+          <td class="ec"><span class="tip">FSx Lustre Scratch: no replication, cheapest — for temporary HPC jobs. Persistent: replicated, for ongoing workloads.</span></td>
+        </tr>
+        <tr>
+          <td>Windows File</td>
+          <td><span class="chip chip-aws">FSx for Windows</span><div class="chip-sub">SMB, Active Directory integration, DFS namespaces</div></td>
+          <td><span class="chip chip-gcp">Filestore</span><div class="chip-sub">No native SMB. Use Windows VMs with SMB share on Persistent Disk.</div></td>
+          <td class="nc"><span class="tag t-awsonly">AWS only</span><br>FSx for Windows is the only managed SMB service. GCP requires self-managed Windows file servers on GCE.</td>
+          <td class="ec"><span class="tip">FSx Windows: Multi-AZ with automatic failover. Integrates with AWS Managed AD for NTFS permissions.</span></td>
+        </tr>
+        <tr>
+          <td>Backup Service</td>
+          <td><span class="chip chip-aws">AWS Backup</span><div class="chip-sub">Centralized backup: EC2, EBS, RDS, DynamoDB, EFS, FSx, Storage Gateway</div></td>
+          <td><span class="chip chip-gcp">Backup and DR Service</span><div class="chip-sub">App-consistent backups for VMs, databases, file systems</div></td>
+          <td class="nc"><span class="tag t-match">≈ match</span><br>AWS Backup supports cross-region and cross-account backup vaults. GCP Backup and DR uses backup vaults similarly.</td>
+          <td class="ec"><span class="tip">AWS Backup Vault Lock: WORM protection on backup vault — even admin can't delete backups. Use for compliance.</span></td>
+        </tr>
+        <tr>
+          <td>Storage Gateway</td>
+          <td><span class="chip chip-aws">Storage Gateway</span><div class="chip-sub">File (NFS/SMB→S3), Volume (iSCSI→S3/EBS), Tape (VTL→Glacier)</div></td>
+          <td><span class="chip chip-gcp">Storage Transfer Service</span><div class="chip-sub">Online data transfer. Not a gateway appliance.</div></td>
+          <td class="nc"><span class="tag t-diff">≠ differs</span><br>Storage Gateway = on-prem hardware/VM that bridges local storage to AWS. GCP has no appliance equivalent — uses Transfer Service for online migration only.</td>
+          <td class="ec"><span class="gotcha">File Gateway: NFS/SMB cache on-prem, backed by S3. Volume Gateway: iSCSI block storage backed by S3/EBS. Tape Gateway: virtual tape library backed by Glacier.</span></td>
+        </tr>
+        <tr>
+          <td>Physical Transfer</td>
+          <td><span class="chip chip-aws">Snow Family</span><div class="chip-sub">Snowcone (8TB), Snowball Edge (80TB, compute), Snowmobile (100PB)</div></td>
+          <td><span class="chip chip-gcp">Transfer Appliance</span><div class="chip-sub">100TB or 480TB appliance. Ship to Google DC.</div></td>
+          <td class="nc"><span class="tag t-similar">~ similar</span><br>AWS Snowball Edge can also run EC2/Lambda at edge (compute). GCP Transfer Appliance is transfer-only.<br><br>Rule of thumb: use physical transfer when online transfer would take &gt;1 week.</td>
+          <td class="ec"><span class="tip">Exam formula: if &gt;2 PB or transfer &gt;1 week over existing bandwidth → Snowball/Snowmobile. Snowmobile for &gt;10 PB datacenter moves.</span></td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════ -->
+<!-- 4. DATABASES -->
+<!-- ══════════════════════════════════════════════════════ -->
+<div class="section" id="databases">
+  <div class="section-head">
+    <span class="section-emoji">🗃️</span>
+    <span class="section-title">Databases</span>
+    <span class="exam-hot">🔥 Very heavy on exams</span>
+    <span class="section-count">10 services</span>
+  </div>
+  <div class="tbl-wrap">
+    <table>
+      <thead><tr><th>Category</th><th>☁ AWS</th><th>🌐 GCP</th><th>Key Differences</th><th>🔥 Exam Tips</th></tr></thead>
+      <tbody>
+        <tr>
+          <td>Managed SQL</td>
+          <td><span class="chip chip-aws">RDS</span><div class="chip-sub">MySQL, PostgreSQL, MariaDB, Oracle, SQL Server<br>Multi-AZ, Read Replicas, automated backups</div></td>
+          <td><span class="chip chip-gcp">Cloud SQL</span><div class="chip-sub">MySQL, PostgreSQL, SQL Server<br>HA replica, read replicas, automated backups</div></td>
+          <td class="nc"><span class="tag t-match">≈ match</span><br>RDS <strong>Multi-AZ</strong>: synchronous standby in different AZ, automatic failover (~60s). Not for read scaling.<br><br>RDS <strong>Read Replicas</strong>: async replication, for read scaling. Can be cross-region. Can be promoted to standalone.<br><br>GCP Cloud SQL HA = Multi-AZ equivalent (standby in another zone).</td>
+          <td class="ec"><span class="gotcha">Multi-AZ ≠ Read Replica. Multi-AZ = HA failover only. Read Replica = performance scaling only. They serve different purposes.</span><span class="tip">RDS automated backups: 1–35 day retention. Snapshots: manual, kept until deleted. Point-in-time restore uses transaction logs.</span><span class="gotcha">RDS Read Replica → promote: breaks replication permanently. New standalone DB, takes few minutes.</span></td>
+        </tr>
+        <tr>
+          <td>High-Perf SQL</td>
+          <td><span class="chip chip-aws">Aurora</span><div class="chip-sub">MySQL/PostgreSQL compat. 6-way replication across 3 AZs. 15 read replicas. Aurora Serverless v2.</div></td>
+          <td><span class="chip chip-gcp">AlloyDB</span><div class="chip-sub">PostgreSQL-compatible. 4× faster OLTP than standard Postgres. HA across zones.</div></td>
+          <td class="nc"><span class="tag t-similar">~ similar</span><br>Aurora storage auto-grows in 10GB increments to 128TB. AlloyDB uses columnar engine for analytics within same DB.<br><br>Aurora <strong>Global Database</strong>: cross-region &lt;1s replication, fast regional failover. AlloyDB cross-region still limited.</td>
+          <td class="ec"><span class="tip">Aurora Serverless v2: scales in fine-grained ACUs (0.5 ACU increments). No cold starts. Good for unpredictable workloads.</span><span class="gotcha">Aurora Global DB: recovery time objective (RTO) &lt;1min for cross-region failover. Designed for RPO~0, RTO~1min.</span></td>
+        </tr>
+        <tr>
+          <td>Global Dist. SQL</td>
+          <td><span class="chip chip-aws">Aurora DSQL</span><div class="chip-sub">Serverless, globally distributed, active-active PostgreSQL. Launched 2024.</div></td>
+          <td><span class="chip chip-gcp">Cloud Spanner</span><div class="chip-sub">Global ACID transactions, horizontal scaling, 99.999% SLA, SQL + interleaving</div></td>
+          <td class="nc"><span class="tag t-similar">~ similar</span><br>Spanner = battle-tested (Google uses it for Ads, Play). Aurora DSQL is newer. Spanner has stronger consistency guarantees (TrueTime).<br><br>Spanner pricing: per node + storage. DSQL: per RCU/WCU.</td>
+          <td class="ec"><span class="tip">Use Spanner when you need: global ACID, &gt;1TB data, &gt;2000 TPS, and can't shard. It's expensive but unique.</span><span class="gotcha">Spanner interleaving: store child rows physically near parent rows — eliminates cross-region joins for hierarchical data.</span></td>
+        </tr>
+        <tr>
+          <td>NoSQL Document</td>
+          <td><span class="chip chip-aws">DynamoDB</span><div class="chip-sub">Key-value + document. On-demand or provisioned capacity. DAX cache. Global Tables.</div></td>
+          <td><span class="chip chip-gcp">Firestore</span><div class="chip-sub">Document DB. Native mode (new) vs Datastore mode (legacy). Multi-region.</div></td>
+          <td class="nc"><span class="tag t-similar">~ similar</span><br>DynamoDB <strong>Global Tables</strong>: active-active multi-region, sub-second replication. Firestore multi-region is active-passive.<br><br>DynamoDB <strong>DAX</strong>: in-memory cache, microsecond reads. Firestore has no equivalent cache service.</td>
+          <td class="ec"><span class="gotcha">DynamoDB: choose partition key wisely — hot partitions throttle. Use write sharding for high-cardinality writes.</span><span class="tip">DynamoDB On-Demand: pay per request, auto-scales. Provisioned: set RCU/WCU, can use Auto Scaling. On-demand costs more per request.</span><span class="gotcha">DynamoDB Streams + Lambda = triggers. Good for event-driven patterns. TTL: automatic expiry, no cost.</span></td>
+        </tr>
+        <tr>
+          <td>Wide-Column / Analytics</td>
+          <td><span class="chip chip-aws">DynamoDB (large scale)</span><div class="chip-sub">+ Keyspaces (managed Cassandra)</div></td>
+          <td><span class="chip chip-gcp">Bigtable</span><div class="chip-sub">Managed HBase/wide-column. Petabyte scale. Low-latency time-series.</div></td>
+          <td class="nc"><span class="tag t-diff">≠ differs</span><br>Bigtable = designed for time-series, IoT, financial data at massive scale. AWS Keyspaces = managed Cassandra (CQL-compatible).<br><br>Bigtable is not serverless — you provision nodes. Best &gt;1TB, &gt;10K QPS.</td>
+          <td class="ec"><span class="tip">Bigtable use cases: IoT sensor data, AdTech, financial ticks, ML feature stores — always ask: "high volume, low latency, time-ordered."</span></td>
+        </tr>
+        <tr>
+          <td>Data Warehouse</td>
+          <td><span class="chip chip-aws">Redshift</span><div class="chip-sub">Provisioned clusters or Serverless. RA3 nodes (managed storage). Redshift Spectrum.</div></td>
+          <td><span class="chip chip-gcp">BigQuery</span><div class="chip-sub">Serverless. Pay per query (on-demand) or flat-rate slots. BQML for in-DB ML.</div></td>
+          <td class="nc"><span class="tag t-similar">~ similar</span><br>BigQuery is <strong>serverless</strong> — no cluster to manage. Redshift requires cluster provisioning.<br><br>BigQuery <strong>slots</strong>: compute units. Buy flat-rate or use on-demand. Redshift: pay for nodes always running.<br><br>Redshift Spectrum = BigQuery federated queries — both query S3/GCS without loading data.</td>
+          <td class="ec"><span class="tip">BigQuery storage: active (recently queried) vs long-term (90+ days untouched = 50% cheaper). Partitioning + clustering → massive query cost reduction.</span><span class="gotcha">BigQuery on-demand: $5/TB scanned. ALWAYS partition and cluster to reduce scan size on exams.</span></td>
+        </tr>
+        <tr>
+          <td>In-Memory Cache</td>
+          <td><span class="chip chip-aws">ElastiCache</span><div class="chip-sub">Redis (cluster mode) or Memcached. Multi-AZ, read replicas, encryption.</div></td>
+          <td><span class="chip chip-gcp">Memorystore</span><div class="chip-sub">Redis or Memcached. Regional HA, automatic failover.</div></td>
+          <td class="nc"><span class="tag t-match">≈ match</span><br>ElastiCache Redis Cluster Mode: horizontal sharding across shards. Cluster Mode Disabled: single shard, up to 5 read replicas.<br><br>Both: sub-millisecond latency, great for session stores, leaderboards, real-time analytics.</td>
+          <td class="ec"><span class="gotcha">ElastiCache is NOT for persistent data. It's a cache — data can be evicted. Never use as primary store.</span><span class="tip">Use ElastiCache in front of RDS to reduce DB load for read-heavy workloads (caching query results).</span></td>
+        </tr>
+        <tr>
+          <td>Search</td>
+          <td><span class="chip chip-aws">OpenSearch Service</span><div class="chip-sub">Managed Elasticsearch/OpenSearch. Full-text search, log analytics, Kibana/Dashboards.</div></td>
+          <td><span class="chip chip-gcp">Vertex AI Search</span><div class="chip-sub">Enterprise semantic search. + Elastic Cloud on Marketplace.</div></td>
+          <td class="nc"><span class="tag t-diff">≠ differs</span><br>No native GCP equivalent to OpenSearch. GCP recommends Elastic Cloud (Marketplace) or Vertex AI Search for enterprise use.<br><br>OpenSearch = ELK stack equivalent — log analytics + search in one managed service.</td>
+          <td class="ec"><span class="tip">OpenSearch common use: centralized logging (ship CloudWatch/VPC Flow Logs → OpenSearch → Kibana dashboards).</span></td>
+        </tr>
+        <tr>
+          <td>Graph DB</td>
+          <td><span class="chip chip-aws">Neptune</span><div class="chip-sub">Managed graph DB. Gremlin (property graph) + SPARQL (RDF). Multi-AZ.</div></td>
+          <td><span class="chip chip-gcp">Spanner Graph</span><div class="chip-sub">Graph queries within Spanner (GSQL). Limited. No dedicated service.</div></td>
+          <td class="nc"><span class="tag t-awsonly">AWS only</span><br>Neptune is the only managed dedicated graph DB. GCP has no equivalent — Spanner Graph is basic. Use Neo4j (Marketplace) on GCP for serious graph workloads.</td>
+          <td class="ec"><span class="tip">Neptune use cases: knowledge graphs, fraud detection, social networks, recommendation engines.</span></td>
+        </tr>
+        <tr>
+          <td>Time-Series DB</td>
+          <td><span class="chip chip-aws">Timestream</span><div class="chip-sub">Serverless time-series DB. Auto-tiering: in-memory → SSD → magnetic.</div></td>
+          <td><span class="chip chip-gcp">Bigtable (time-series)</span><div class="chip-sub">No dedicated TS service. Bigtable with timestamp row key.</div></td>
+          <td class="nc"><span class="tag t-awsonly">AWS only</span><br>Timestream is purpose-built for IoT/DevOps metrics. GCP uses Bigtable or BigQuery for time-series at scale.</td>
+          <td class="ec"><span class="tip">Timestream: trillion events/day, auto-scaling, built-in time-series analytics functions. Good IoT backend.</span></td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════ -->
+<!-- 5. NETWORKING -->
+<!-- ══════════════════════════════════════════════════════ -->
+<div class="section" id="networking">
+  <div class="section-head">
+    <span class="section-emoji">🌐</span>
+    <span class="section-title">Networking &amp; CDN</span>
+    <span class="exam-hot">🔥 Heavy on exams</span>
+    <span class="section-count">11 services</span>
+  </div>
+  <div class="tbl-wrap">
+    <table>
+      <thead><tr><th>Category</th><th>☁ AWS</th><th>🌐 GCP</th><th>Key Differences</th><th>🔥 Exam Tips</th></tr></thead>
+      <tbody>
+        <tr>
+          <td>Virtual Network</td>
+          <td><span class="chip chip-aws">VPC</span><div class="chip-sub">Regional. Subnets per AZ. CIDR /16 to /28. NACL + SG layered security.</div></td>
+          <td><span class="chip chip-gcp">VPC (Global)</span><div class="chip-sub">Global by default. Subnets are regional. Auto or custom mode.</div></td>
+          <td class="nc"><span class="tag t-diff">≠ differs</span><br><strong>AWS VPC = regional</strong>. You need VPC peering to connect across regions. Subnets are AZ-scoped.<br><br><strong>GCP VPC = global</strong>. One VPC spans all regions. Subnets are regional. Single VPC can have resources in us-east and asia-southeast talking natively.</td>
+          <td class="ec"><span class="gotcha">AWS NACLs: stateless (return traffic needs explicit allow). Security Groups: stateful (return traffic allowed automatically).</span><span class="tip">GCP firewall rules are applied at the VPC level (not subnet), using network tags or service accounts as targets.</span></td>
+        </tr>
+        <tr>
+          <td>VPC Connectivity</td>
+          <td><span class="chip chip-aws">VPC Peering</span><div class="chip-sub">+ Transit Gateway (hub-and-spoke), PrivateLink</div></td>
+          <td><span class="chip chip-gcp">VPC Peering</span><div class="chip-sub">+ Shared VPC, Private Service Connect</div></td>
+          <td class="nc"><span class="tag t-similar">~ similar</span><br>AWS <strong>Transit Gateway</strong>: managed hub connecting 1000s of VPCs/VPNs/Direct Connects. GCP <strong>Shared VPC</strong>: centralized VPC shared across projects (different concept).<br><br>VPC Peering on both: non-transitive (A↔B and B↔C ≠ A↔C).</td>
+          <td class="ec"><span class="gotcha">VPC peering is non-transitive. For transitive routing on AWS: use Transit Gateway. On GCP: use Network Connectivity Center or Shared VPC.</span><span class="tip">AWS PrivateLink = GCP Private Service Connect. Both allow private access to services without exposing traffic to internet.</span></td>
+        </tr>
+        <tr>
+          <td>Load Balancing</td>
+          <td><span class="chip chip-aws">ALB (L7) / NLB (L4) / GWLB</span><div class="chip-sub">ALB: path/host routing, WAF, gRPC. NLB: static IP, ultra-low latency. GWLB: inline appliances.</div></td>
+          <td><span class="chip chip-gcp">Cloud Load Balancing</span><div class="chip-sub">HTTP(S) Global / Regional. TCP/UDP. Internal/External. Anycast IP.</div></td>
+          <td class="nc"><span class="tag t-similar">~ similar</span><br>GCP HTTP(S) LB is <strong>global anycast</strong> — single IP, traffic routed to nearest healthy backend. AWS ALB is regional (use Global Accelerator for global routing).<br><br>AWS GWLB: chain 3rd-party firewalls/IDS inline. GCP uses Packet Mirroring or third-party NVAs.</td>
+          <td class="ec"><span class="tip">ALB vs NLB: ALB for HTTP/HTTPS/gRPC (L7, path routing, host routing). NLB for TCP/UDP (L4, static Elastic IP, PrivateLink endpoint).</span><span class="gotcha">NLB has static IPs — use when downstream requires whitelisting a specific IP. ALB IPs change.</span></td>
+        </tr>
+        <tr>
+          <td>CDN</td>
+          <td><span class="chip chip-aws">CloudFront</span><div class="chip-sub">450+ edge PoPs. Origin: S3, ALB, EC2, custom. Lambda@Edge, CloudFront Functions.</div></td>
+          <td><span class="chip chip-gcp">Cloud CDN</span><div class="chip-sub">Integrated with GCP LB. Cache modes: USE_ORIGIN_HEADERS, CACHE_ALL_STATIC, FORCE_CACHE_ALL.</div></td>
+          <td class="nc"><span class="tag t-similar">~ similar</span><br>CloudFront has <strong>Lambda@Edge</strong> (run code at edge, 5s timeout) and <strong>CloudFront Functions</strong> (sub-ms, viewer-side only). GCP Cloud CDN has no edge compute — use Cloud Run for that.<br><br>CloudFront <strong>OAC</strong> (Origin Access Control): restrict S3 to CloudFront only.</td>
+          <td class="ec"><span class="tip">CloudFront signed URLs = temporary access to private content. Signed Cookies = multiple files at once.</span><span class="gotcha">CloudFront OAI is deprecated → use OAC. OAC supports SSE-KMS whereas OAI doesn't.</span></td>
+        </tr>
+        <tr>
+          <td>DNS</td>
+          <td><span class="chip chip-aws">Route 53</span><div class="chip-sub">Routing: Simple, Weighted, Latency, Geolocation, Geoproximity, Failover, Multivalue</div></td>
+          <td><span class="chip chip-gcp">Cloud DNS</span><div class="chip-sub">100% SLA. Public/private zones. No traffic routing — use LB for that.</div></td>
+          <td class="nc"><span class="tag t-diff">≠ differs</span><br>Route 53 has <strong>traffic routing policies</strong> — powerful for multi-region HA, blue/green, weighted canary. Cloud DNS is a pure DNS service — no routing logic. Use GCP LB for routing.</td>
+          <td class="ec"><span class="gotcha">Route 53 health checks: only work with public resources. Private resources need CloudWatch alarm → Route 53 health check.</span><span class="tip">Route 53 Failover: primary + secondary. If primary health check fails, traffic automatically shifts to secondary (DR site).</span></td>
+        </tr>
+        <tr>
+          <td>Private Connectivity</td>
+          <td><span class="chip chip-aws">Direct Connect</span><div class="chip-sub">Dedicated (1/10/100Gbps) or Hosted. Private/Public/Transit VIFs. LAG for redundancy.</div></td>
+          <td><span class="chip chip-gcp">Cloud Interconnect</span><div class="chip-sub">Dedicated (10/100Gbps) or Partner Interconnect. VLAN attachments.</div></td>
+          <td class="nc"><span class="tag t-match">≈ match</span><br>Both bypass public internet. AWS has <strong>Direct Connect Gateway</strong> to connect to multiple VPCs/regions via single DX. GCP uses Cloud Router with BGP for dynamic routing.</td>
+          <td class="ec"><span class="gotcha">DX alone has no SLA for redundancy. For 99.99%: two DX connections to different locations. Fallback: IPSec VPN over DX or as backup.</span><span class="tip">Direct Connect + VPN: use VPN as backup for DX failover. Route 53 failover or BGP routing handles the switch.</span></td>
+        </tr>
+        <tr>
+          <td>Site-to-Site VPN</td>
+          <td><span class="chip chip-aws">Site-to-Site VPN</span><div class="chip-sub">IPSec. Up to 1.25Gbps per tunnel. Accelerated VPN (Global Accelerator).</div></td>
+          <td><span class="chip chip-gcp">Cloud VPN</span><div class="chip-sub">Classic or HA VPN (99.99% SLA with 2 tunnels). IPSec.</div></td>
+          <td class="nc"><span class="tag t-match">≈ match</span><br>GCP HA VPN = 2 tunnels, 2 gateways → 99.99% SLA. Classic VPN = 1 tunnel = 99.9% SLA.</td>
+          <td class="ec"><span class="tip">AWS: use Accelerated VPN for globally distributed offices — routes through AWS backbone, not public internet.</span></td>
+        </tr>
+        <tr>
+          <td>Global Accelerator</td>
+          <td><span class="chip chip-aws">Global Accelerator</span><div class="chip-sub">Anycast static IPs. Route to nearest healthy AWS endpoint. TCP/UDP.</div></td>
+          <td><span class="chip chip-gcp">Premium Network Tier</span><div class="chip-sub">Default tier. Routes via Google's backbone globally. vs Standard tier (public internet).</div></td>
+          <td class="nc"><span class="tag t-similar">~ similar</span><br>GCP <strong>Premium tier</strong>: traffic enters Google's network at nearest PoP, stays on Google backbone. Standard tier: uses public internet. AWS Global Accelerator = similar to Premium network tier.</td>
+          <td class="ec"><span class="gotcha">CloudFront vs Global Accelerator: CF is for HTTP/caching. GA is for any TCP/UDP, static IPs, no caching. Don't confuse them.</span></td>
+        </tr>
+        <tr>
+          <td>API Gateway</td>
+          <td><span class="chip chip-aws">API Gateway</span><div class="chip-sub">REST/HTTP/WebSocket APIs. Lambda integration, Auth, throttling, usage plans.</div></td>
+          <td><span class="chip chip-gcp">Apigee + Cloud Endpoints</span><div class="chip-sub">Apigee: enterprise API management. Endpoints: lightweight proxy for Cloud Run/GKE.</div></td>
+          <td class="nc"><span class="tag t-similar">~ similar</span><br>Apigee = enterprise-grade (analytics, monetization, developer portal). Far more feature-rich than AWS API Gateway. Cloud Endpoints is lightweight like HTTP API Gateway.</td>
+          <td class="ec"><span class="tip">AWS: HTTP API Gateway is cheaper and faster than REST API Gateway. Use REST API for advanced features (caching, request transforms, usage plans).</span></td>
+        </tr>
+        <tr>
+          <td>Network Security</td>
+          <td><span class="chip chip-aws">Security Groups + NACLs</span><div class="chip-sub">SG: stateful, instance-level. NACL: stateless, subnet-level.</div></td>
+          <td><span class="chip chip-gcp">Firewall Rules + Policies</span><div class="chip-sub">VPC firewall rules (instance/tag-level). Hierarchical Firewall Policies (org/folder).</div></td>
+          <td class="nc"><span class="tag t-similar">~ similar</span><br>GCP <strong>Hierarchical Firewall Policies</strong>: enforced org-wide, lower levels can't override. Like AWS SCP but for network rules.<br><br>GCP rules target by <strong>network tags</strong> or <strong>service accounts</strong>. AWS SGs target by ID/CIDR.</td>
+          <td class="ec"><span class="gotcha">NACLs are evaluated in order by rule number (lowest first). First match wins. Security Groups evaluate all rules before deciding.</span></td>
+        </tr>
+        <tr>
+          <td>VPC Flow Logs</td>
+          <td><span class="chip chip-aws">VPC Flow Logs</span><div class="chip-sub">→ CloudWatch Logs or S3. ENI-level.</div></td>
+          <td><span class="chip chip-gcp">VPC Flow Logs</span><div class="chip-sub">→ Cloud Logging or BigQuery. Subnet-level.</div></td>
+          <td class="nc"><span class="tag t-match">≈ match</span><br>Both capture IP traffic metadata (not content). Useful for security analysis, forensics, connectivity troubleshooting.</td>
+          <td class="ec"><span class="tip">VPC Flow Logs → OpenSearch (AWS) or BigQuery (GCP): analyze traffic patterns, detect anomalies, compliance audit.</span></td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════ -->
+<!-- 6. SECURITY & IAM -->
+<!-- ══════════════════════════════════════════════════════ -->
+<div class="section" id="security">
+  <div class="section-head">
+    <span class="section-emoji">🔐</span>
+    <span class="section-title">Security &amp; Identity</span>
+    <span class="exam-hot">🔥 Very heavy on exams</span>
+    <span class="section-count">12 services</span>
+  </div>
+  <div class="tbl-wrap">
+    <table>
+      <thead><tr><th>Category</th><th>☁ AWS</th><th>🌐 GCP</th><th>Key Differences</th><th>🔥 Exam Tips</th></tr></thead>
+      <tbody>
+        <tr>
+          <td>IAM Core</td>
+          <td><span class="chip chip-aws">IAM</span><div class="chip-sub">Users, Groups, Roles, Policies (JSON). Managed vs Inline. Permission boundaries.</div></td>
+          <td><span class="chip chip-gcp">Cloud IAM</span><div class="chip-sub">Members (Google accounts, service accounts, groups). Roles. Resource-level bindings.</div></td>
+          <td class="nc"><span class="tag t-similar">~ similar</span><br>AWS: <strong>policy attached to identity</strong>. GCP: <strong>binding on resource</strong> (who can do what on which resource).<br><br>AWS has <strong>Permission Boundaries</strong>: cap max permissions, even if policy says more. GCP uses IAM Conditions for similar fine-grained control.</td>
+          <td class="ec"><span class="gotcha">AWS: explicit Deny always wins over Allow. Even if 10 policies allow, one Deny blocks it.</span><span class="tip">GCP IAM roles: Primitive (Owner/Editor/Viewer — avoid), Predefined (service-specific), Custom (fine-grained).</span><span class="gotcha">AWS: IAM roles trust policy = who can assume this role. Permission policy = what they can do.</span></td>
+        </tr>
+        <tr>
+          <td>Service Identity</td>
+          <td><span class="chip chip-aws">IAM Role (on EC2/Lambda)</span><div class="chip-sub">Instance Profile (EC2), Execution Role (Lambda). Temporary credentials via STS.</div></td>
+          <td><span class="chip chip-gcp">Service Account</span><div class="chip-sub">VM service account, Workload Identity (for GKE pods). JSON key or keyless.</div></td>
+          <td class="nc"><span class="tag t-similar">~ similar</span><br>GCP <strong>Workload Identity Federation</strong>: GKE pods get Google identities without service account keys. AWS equivalent = IAM Roles for Service Accounts (IRSA) on EKS.<br><br>GCP: avoid service account JSON keys (rotate, leak risk). Use Workload Identity instead.</td>
+          <td class="ec"><span class="tip">EKS IRSA: annotate K8s service account → maps to IAM Role. Pods get temporary AWS credentials. No long-lived keys.</span><span class="gotcha">GCP: service account key files are long-lived credentials — audit and rotate. Prefer keyless Workload Identity.</span></td>
+        </tr>
+        <tr>
+          <td>SSO / Federation</td>
+          <td><span class="chip chip-aws">IAM Identity Center</span><div class="chip-sub">Formerly AWS SSO. SAML 2.0/OIDC. Integrates with AD, Okta. Multi-account access.</div></td>
+          <td><span class="chip chip-gcp">Cloud Identity + Workforce Identity Fed.</span><div class="chip-sub">Google Workspace/AD sync. SAML/OIDC federation for external IdPs.</div></td>
+          <td class="nc"><span class="tag t-match">≈ match</span><br>Both federate corporate identities (AD/Okta/SAML) to cloud access. AWS IAM Identity Center = single portal for all accounts in Organization.</td>
+          <td class="ec"><span class="tip">AWS: IAM Identity Center permission sets = IAM policies deployed to target accounts. Centralizes access management across 100s of accounts.</span></td>
+        </tr>
+        <tr>
+          <td>Secrets Management</td>
+          <td><span class="chip chip-aws">Secrets Manager</span><div class="chip-sub">Auto rotation (Lambda). $0.40/secret/month. Versioning. Cross-account.</div></td>
+          <td><span class="chip chip-gcp">Secret Manager</span><div class="chip-sub">Version control, audit logs, regional/global. Rotation via Cloud Functions.</div></td>
+          <td class="nc"><span class="tag t-match">≈ match</span><br>AWS also has <strong>Parameter Store</strong>: free tier for standard params, cheaper than Secrets Manager but no auto-rotation. Use Parameter Store for non-secret config.</td>
+          <td class="ec"><span class="tip">Secrets Manager auto-rotation: Lambda function rotates secret on schedule. Supports RDS, Redshift, DocumentDB natively.</span><span class="gotcha">Secrets Manager ≠ Parameter Store. Secrets Manager costs more but adds rotation. Parameter Store (SecureString tier) for cheaper secrets without rotation.</span></td>
+        </tr>
+        <tr>
+          <td>KMS / Encryption</td>
+          <td><span class="chip chip-aws">KMS</span><div class="chip-sub">CMK (Customer Managed Keys), AWS Managed Keys, Data Keys. Envelope encryption.</div></td>
+          <td><span class="chip chip-gcp">Cloud KMS</span><div class="chip-sub">CMEK across all GCP services. Key rings, crypto key versions. HSM-backed option.</div></td>
+          <td class="nc"><span class="tag t-match">≈ match</span><br><strong>Envelope encryption</strong>: KMS encrypts a data key, data key encrypts data. Limits exposure of CMK. Both clouds use this pattern.<br><br>GCP CMEK: customer controls the encryption key used by GCP services (BigQuery, GCS, Spanner).</td>
+          <td class="ec"><span class="gotcha">KMS keys are regional — can't use us-east-1 key to encrypt eu-west-1 resources directly. Create keys in each region.</span><span class="tip">KMS key rotation: AWS auto-rotate CMK yearly (optional). Key material stays, new backing key created. Old data re-encrypted on next use.</span></td>
+        </tr>
+        <tr>
+          <td>WAF / DDoS</td>
+          <td><span class="chip chip-aws">WAF + Shield</span><div class="chip-sub">WAF: L7 rules (SQL injection, XSS, IP rules). Shield Standard (free) / Advanced ($3K/mo).</div></td>
+          <td><span class="chip chip-gcp">Cloud Armor</span><div class="chip-sub">WAF + DDoS in one. Managed protection rules. Adaptive protection (ML-based). Preconfigured rules.</div></td>
+          <td class="nc"><span class="tag t-similar">~ similar</span><br>AWS Shield Advanced: DDoS cost protection + 24/7 DRT team access. Cloud Armor Managed Protection Plus = similar premium tier.<br><br>Cloud Armor <strong>Adaptive Protection</strong>: ML detects and blocks volumetric attacks automatically.</td>
+          <td class="ec"><span class="tip">Shield Advanced: subscribe org-wide in Firewall Manager for blanket DDoS protection across ALBs, CloudFront, Route 53.</span><span class="gotcha">WAF WebACL rules: evaluated in order. Default action = allow/block if no rule matches. Attach to CloudFront, ALB, API Gateway, AppSync.</span></td>
+        </tr>
+        <tr>
+          <td>Security Posture</td>
+          <td><span class="chip chip-aws">Security Hub</span><div class="chip-sub">Aggregates findings from GuardDuty, Inspector, Macie, IAM AA. CSPM. CIS benchmarks.</div></td>
+          <td><span class="chip chip-gcp">Security Command Center (SCC)</span><div class="chip-sub">Standard (free) / Premium (AI-powered, compliance reports). CSPM + CWPP.</div></td>
+          <td class="nc"><span class="tag t-match">≈ match</span><br>Both are CSPM (Cloud Security Posture Management) hubs. Security Hub = aggregator. SCC Premium = threat detection + compliance.<br><br>AWS: Security Hub → EventBridge → Lambda for automated remediation.</td>
+          <td class="ec"><span class="tip">Security Hub: enable across all accounts via Organizations. Findings auto-aggregated to delegated admin account. Critical for multi-account governance.</span></td>
+        </tr>
+        <tr>
+          <td>Threat Detection</td>
+          <td><span class="chip chip-aws">GuardDuty</span><div class="chip-sub">ML-based threat detection: CloudTrail, VPC Flow Logs, DNS logs, S3, EKS, Malware.</div></td>
+          <td><span class="chip chip-gcp">SCC Event Threat Detection</span><div class="chip-sub">Part of SCC Premium. Detects threats in Cloud Logging, GCS, IAM.</div></td>
+          <td class="nc"><span class="tag t-similar">~ similar</span><br>GuardDuty: no agents needed, fully managed, detects compromised EC2/containers. Enable across all accounts with Organizations.</td>
+          <td class="ec"><span class="tip">GuardDuty finding → EventBridge rule → SNS/Lambda → auto-isolate EC2 (quarantine SG). Classic exam automated remediation pattern.</span></td>
+        </tr>
+        <tr>
+          <td>Vuln Assessment</td>
+          <td><span class="chip chip-aws">Inspector</span><div class="chip-sub">Automated vuln scanning: EC2 (SSM agent), Lambda functions, ECR container images.</div></td>
+          <td><span class="chip chip-gcp">Artifact Analysis</span><div class="chip-sub">Container image scanning in Artifact Registry. OS vuln detection.</div></td>
+          <td class="nc"><span class="tag t-similar">~ similar</span><br>Inspector continuously scans (not point-in-time). Artifact Analysis scans on push + continuous re-evaluation against new CVEs.</td>
+          <td class="ec"><span class="tip">Inspector: enable for entire org. Findings go to Security Hub. Use EventBridge to trigger Lambda auto-patching workflows.</span></td>
+        </tr>
+        <tr>
+          <td>Data Classification</td>
+          <td><span class="chip chip-aws">Macie</span><div class="chip-sub">ML-based PII/sensitive data discovery in S3. Findings → Security Hub.</div></td>
+          <td><span class="chip chip-gcp">Cloud DLP (Sensitive Data Protection)</span><div class="chip-sub">150+ built-in infoTypes. Inspect/de-identify GCS, BigQuery, Datastore.</div></td>
+          <td class="nc"><span class="tag t-similar">~ similar</span><br>GCP DLP is more feature-rich — supports de-identification (redact, tokenize, encrypt). Macie focuses on detection/classification, not transformation.</td>
+          <td class="ec"><span class="tip">GCP DLP de-identification: redact → replace with [REDACTED]. Tokenize → replace with format-preserving token. Mask → replace chars with *.</span></td>
+        </tr>
+        <tr>
+          <td>Certificate Mgmt</td>
+          <td><span class="chip chip-aws">ACM</span><div class="chip-sub">Free TLS certs for ALB/CloudFront/API GW. Auto-renewal. Can't export private key.</div></td>
+          <td><span class="chip chip-gcp">Certificate Manager</span><div class="chip-sub">Free managed TLS for GCP LB. Google-managed or self-managed.</div></td>
+          <td class="nc"><span class="tag t-match">≈ match</span><br>ACM certificates: cannot be downloaded/used outside AWS. For external use → issue via ACM Private CA or use public CA.</td>
+          <td class="ec"><span class="gotcha">ACM certs: valid for 13 months, auto-renew at 60 days before expiry. If auto-renewal fails (DNS/email validation lapsed) → cert expires → outage.</span></td>
+        </tr>
+        <tr>
+          <td>Audit Logging</td>
+          <td><span class="chip chip-aws">CloudTrail</span><div class="chip-sub">API call history. Management events (free, 90d). Data events (S3/Lambda, paid). CloudTrail Lake.</div></td>
+          <td><span class="chip chip-gcp">Cloud Audit Logs</span><div class="chip-sub">Admin Activity (free, 400d retention). Data Access (paid, configurable). System Events.</div></td>
+          <td class="nc"><span class="tag t-match">≈ match</span><br>CloudTrail default: management events only (free, 90 days). Enable <strong>Data Events</strong> for S3 object-level operations (paid). Enable <strong>Insights</strong> for anomaly detection.<br><br>GCP: Data Access logs OFF by default — must enable per service.</td>
+          <td class="ec"><span class="gotcha">CloudTrail: logs delivered to S3 within 15 minutes. Enable log file validation to detect tampering (SHA-256 digest files).</span><span class="tip">CloudTrail → CloudWatch Logs → metric filter → alarm: detect root account usage, config changes, unauthorized API calls.</span></td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════ -->
+<!-- 7. GOVERNANCE -->
+<!-- ══════════════════════════════════════════════════════ -->
+<div class="section" id="governance">
+  <div class="section-head">
+    <span class="section-emoji">🏛️</span>
+    <span class="section-title">Governance, Compliance &amp; Multi-Account</span>
+    <span class="exam-hot">🔥 Heavy on exams</span>
+    <span class="section-count">8 services</span>
+  </div>
+  <div class="tbl-wrap">
+    <table>
+      <thead><tr><th>Category</th><th>☁ AWS</th><th>🌐 GCP</th><th>Key Differences</th><th>🔥 Exam Tips</th></tr></thead>
+      <tbody>
+        <tr>
+          <td>Account Hierarchy</td>
+          <td><span class="chip chip-aws">AWS Organizations</span><div class="chip-sub">Management account → OUs → Member accounts. Consolidated billing. SCPs.</div></td>
+          <td><span class="chip chip-gcp">Resource Hierarchy</span><div class="chip-sub">Organization → Folders → Projects. IAM policies & Org Policies inherited downward.</div></td>
+          <td class="nc"><span class="tag t-similar">~ similar</span><br>AWS OUs ≈ GCP Folders. AWS Accounts ≈ GCP Projects. Both use hierarchy for policy inheritance.<br><br>AWS <strong>SCPs</strong> restrict permissions (even admins). GCP <strong>Org Policies</strong> restrict resource configurations (what can be created/configured).</td>
+          <td class="ec"><span class="tip">SCP: max permission guardrails across accounts. Even Account Admin can't exceed SCP. SCPs do NOT grant permissions — they only restrict.</span><span class="gotcha">SCP on OU: applies to all accounts including management account? No — SCPs never apply to management account.</span></td>
+        </tr>
+        <tr>
+          <td>Landing Zone</td>
+          <td><span class="chip chip-aws">Control Tower</span><div class="chip-sub">Automated multi-account setup. Guardrails (preventive SCPs + detective Config rules). Account Factory.</div></td>
+          <td><span class="chip chip-gcp">Google Cloud Setup Checklist + Assured Workloads</span><div class="chip-sub">No single-click landing zone service like Control Tower.</div></td>
+          <td class="nc"><span class="tag t-awsonly">AWS only</span><br>Control Tower automates: baseline OU structure, mandatory guardrails, CloudTrail org-wide, central log archive account, security tooling account. GCP has no equivalent single service.</td>
+          <td class="ec"><span class="tip">Control Tower guardrails: Preventive (SCPs, block actions) vs Detective (Config rules, detect non-compliance). Detective guardrails don't block — they alert.</span></td>
+        </tr>
+        <tr>
+          <td>Policy Enforcement</td>
+          <td><span class="chip chip-aws">Service Control Policies (SCPs)</span><div class="chip-sub">Identity-based max permission guardrails. Allow or Deny lists.</div></td>
+          <td><span class="chip chip-gcp">Organization Policy Service</span><div class="chip-sub">Resource-based constraints (e.g., restrict VM regions, disable public IPs, require OS Login).</div></td>
+          <td class="nc"><span class="tag t-diff">≠ differs</span><br>SCPs = who can do what (identity controls). Org Policies = what can be configured (resource controls). Different dimensions of governance.<br><br>Org Policy example: <code>constraints/compute.restrictCloudRunRegions</code> — only allow Cloud Run in approved regions.</td>
+          <td class="ec"><span class="tip">GCP Org Policy: enforce at org/folder/project level, inherited down. Child can't override unless parent allows override.</span><span class="gotcha">Common Org Policies exam knows: disable external IPs on VMs, restrict resource location, enforce OS Login, require uniform bucket access.</span></td>
+        </tr>
+        <tr>
+          <td>Config Compliance</td>
+          <td><span class="chip chip-aws">AWS Config</span><div class="chip-sub">Records resource config history. Managed rules + custom Lambda rules. Auto-remediation with SSM.</div></td>
+          <td><span class="chip chip-gcp">Config Validator + SCC</span><div class="chip-sub">OPA-based policy checks. Security Command Center for compliance dashboards.</div></td>
+          <td class="nc"><span class="tag t-similar">~ similar</span><br>AWS Config: continuous monitoring + compliance timeline. Knows what a resource looked like at any point in time. Essential for compliance (SOC2, PCI, HIPAA).</td>
+          <td class="ec"><span class="tip">AWS Config aggregator: collect compliance data from all accounts/regions into one account. Use for org-wide compliance dashboard.</span><span class="gotcha">Config rules evaluate: on config change, periodically, or on schedule. Non-compliant ≠ auto-remediated unless you configure SSM Automation.</span></td>
+        </tr>
+        <tr>
+          <td>Consolidated Billing</td>
+          <td><span class="chip chip-aws">AWS Cost Explorer + Consolidated Billing</span><div class="chip-sub">Org billing. Volume discounts shared. Savings Plans shared across org. CURs.</div></td>
+          <td><span class="chip chip-gcp">Cloud Billing Account</span><div class="chip-sub">One billing account → multiple projects. Committed Use Discounts shared across projects.</div></td>
+          <td class="nc"><span class="tag t-match">≈ match</span><br>Both centralize billing across the organization. Discounts (Reserved/CUD) can be shared across linked accounts/projects.</td>
+          <td class="ec"><span class="tip">AWS: Reserved Instance sharing is ON by default in org — any account can benefit. Turn off per account if you want isolation.</span></td>
+        </tr>
+        <tr>
+          <td>Resource Sharing</td>
+          <td><span class="chip chip-aws">Resource Access Manager (RAM)</span><div class="chip-sub">Share: VPC subnets, Transit GW, Route 53 Resolver, License Manager across accounts.</div></td>
+          <td><span class="chip chip-gcp">Shared VPC</span><div class="chip-sub">Host project shares VPC subnets with service projects. Central network control.</div></td>
+          <td class="nc"><span class="tag t-similar">~ similar</span><br>AWS RAM shares subnets across accounts (each account uses own resources in shared subnet). GCP Shared VPC: service project VMs deploy in host project's VPC subnets.</td>
+          <td class="ec"><span class="tip">RAM VPC subnet sharing: central networking team owns the VPC, app teams deploy workloads without managing networking. Same concept as Shared VPC.</span></td>
+        </tr>
+        <tr>
+          <td>Tag Management</td>
+          <td><span class="chip chip-aws">Tag Policies + Cost Allocation Tags</span><div class="chip-sub">Enforce tagging standards via AWS Organizations. Cost split by tags.</div></td>
+          <td><span class="chip chip-gcp">Labels + Resource Manager Tags</span><div class="chip-sub">Labels: key-value on resources. Tags: access control, org policy conditions.</div></td>
+          <td class="nc"><span class="tag t-similar">~ similar</span><br>GCP <strong>Resource Manager Tags</strong> (not Labels) can be used in IAM Conditions and Org Policy conditions — more powerful than Labels for governance.</td>
+          <td class="ec"><span class="tip">Enable Cost Allocation Tags in AWS Billing console — tags must be explicitly activated. Use for showback/chargeback reports by team/env/project.</span></td>
+        </tr>
+        <tr>
+          <td>Compliance Programs</td>
+          <td><span class="chip chip-aws">Artifact + Macie + Config</span><div class="chip-sub">Artifact: compliance reports (SOC, ISO, PCI). Audit Manager: automated evidence collection.</div></td>
+          <td><span class="chip chip-gcp">Compliance Reports Manager + Assured Workloads</span><div class="chip-sub">Assured Workloads: enforce compliance controls for FedRAMP, HIPAA, ITAR by config.</div></td>
+          <td class="nc"><span class="tag t-similar">~ similar</span><br>GCP <strong>Assured Workloads</strong>: creates a folder with Org Policies automatically configured for a compliance framework. AWS needs manual Control Tower guardrail setup.</td>
+          <td class="ec"><span class="tip">AWS Audit Manager: maps AWS usage to compliance frameworks (PCI DSS, HIPAA, CIS). Auto-collects evidence for auditors. Saves weeks of manual work.</span></td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════ -->
+<!-- 8. MIGRATION -->
+<!-- ══════════════════════════════════════════════════════ -->
+<div class="section" id="migration">
+  <div class="section-head">
+    <span class="section-emoji">🚚</span>
+    <span class="section-title">Migration &amp; Transfer</span>
+    <span class="exam-hot">🔥 Heavy on AWS exam</span>
+    <span class="section-count">8 services</span>
+  </div>
+  <div class="tbl-wrap">
+    <table>
+      <thead><tr><th>Category</th><th>☁ AWS</th><th>🌐 GCP</th><th>Key Differences</th><th>🔥 Exam Tips</th></tr></thead>
+      <tbody>
+        <tr>
+          <td>Server Migration</td>
+          <td><span class="chip chip-aws">Application Migration Service (MGN)</span><div class="chip-sub">Lift-and-shift. Continuous block-level replication → cutover. Agent-based.</div></td>
+          <td><span class="chip chip-gcp">Migrate to VMs</span><div class="chip-sub">Streams workloads while running. VMware, AWS, Azure, on-prem → GCE.</div></td>
+          <td class="nc"><span class="tag t-match">≈ match</span><br>MGN replaces SMS (Server Migration Service, deprecated). Both replicate servers and enable fast cutover. GCP Migrate to VMs streams disk in background — app runs during migration.</td>
+          <td class="ec"><span class="tip">MGN: install replication agent → continuous replication to staging → test → cutover. Minimal downtime.</span></td>
+        </tr>
+        <tr>
+          <td>Database Migration</td>
+          <td><span class="chip chip-aws">DMS</span><div class="chip-sub">Database Migration Service. Homogeneous (MySQL→MySQL) or heterogeneous. SCT for schema conversion.</div></td>
+          <td><span class="chip chip-gcp">Database Migration Service (DMS)</span><div class="chip-sub">MySQL, PostgreSQL → Cloud SQL / AlloyDB. Minimal downtime via CDC.</div></td>
+          <td class="nc"><span class="tag t-match">≈ match</span><br>AWS DMS + <strong>SCT (Schema Conversion Tool)</strong>: for heterogeneous migrations (Oracle → Aurora). GCP DMS focuses on MySQL/Postgres only.<br><br>Both use <strong>CDC</strong> (Change Data Capture) for near-zero downtime migration.</td>
+          <td class="ec"><span class="tip">AWS DMS: source remains live during migration. Use SCT first to convert schema, then DMS for data. Test with a small table first.</span><span class="gotcha">DMS replication instance must be in same VPC/network as source DB or have connectivity via VPN/DX.</span></td>
+        </tr>
+        <tr>
+          <td>Migration Hub</td>
+          <td><span class="chip chip-aws">Migration Hub</span><div class="chip-sub">Central tracking for all migration projects. Integrates with MGN, DMS, ADS.</div></td>
+          <td><span class="chip chip-gcp">Rapid Assessment & Migration Program (RAMP)</span><div class="chip-sub">Guided migration framework + partner network. Migrations Hub equivalent.</div></td>
+          <td class="nc"><span class="tag t-similar">~ similar</span><br>AWS Migration Hub Strategy Recommendations: analyzes apps and recommends 7Rs (Retire, Retain, Rehost, Replatform, Repurchase, Refactor, Relocate).</td>
+          <td class="ec"><span class="tip">Know the 7Rs for exam: Retire (decommission), Retain (keep on-prem), Rehost (lift-and-shift, MGN), Replatform (lift-tinker-and-shift), Repurchase (SaaS), Refactor (re-architect), Relocate (VMware Cloud on AWS).</span></td>
+        </tr>
+        <tr>
+          <td>Discovery</td>
+          <td><span class="chip chip-aws">Application Discovery Service (ADS)</span><div class="chip-sub">Agent-based or agentless (VMware). Discovers on-prem servers, dependencies, performance.</div></td>
+          <td><span class="chip chip-gcp">StratoZone / Migration Center</span><div class="chip-sub">Inventory and dependency analysis. Fit assessment for GCP migration.</div></td>
+          <td class="nc"><span class="tag t-match">≈ match</span><br>Both discover on-prem inventory before migration. Run for 4-6 weeks to capture peak usage patterns for right-sizing.</td>
+          <td class="ec"><span class="tip">ADS → Migration Hub: discovered data feeds into Hub for migration planning and tracking.</span></td>
+        </tr>
+        <tr>
+          <td>Online Data Transfer</td>
+          <td><span class="chip chip-aws">DataSync</span><div class="chip-sub">Scheduled/on-demand. NFS, SMB, S3, EFS, FSx. On-prem↔AWS or AWS↔AWS.</div></td>
+          <td><span class="chip chip-gcp">Storage Transfer Service</span><div class="chip-sub">S3, Azure Blob, HTTP/HTTPS, on-prem (agent) → GCS.</div></td>
+          <td class="nc"><span class="tag t-match">≈ match</span><br>DataSync: incremental transfer with integrity checks. Up to 10× faster than CLI tools. Supports encryption in transit.<br><br>GCP Transfer Service also migrates from S3 → GCS (cloud-to-cloud).</td>
+          <td class="ec"><span class="tip">DataSync vs Storage Gateway: DataSync = one-time or scheduled transfer. Storage Gateway = ongoing hybrid connectivity (not migration).</span></td>
+        </tr>
+        <tr>
+          <td>Transfer Family</td>
+          <td><span class="chip chip-aws">AWS Transfer Family</span><div class="chip-sub">Managed SFTP/FTPS/FTP servers that store files in S3 or EFS. No code changes.</div></td>
+          <td><span class="chip chip-gcp">(No direct equiv)</span><div class="chip-sub">Use GCE VM with SFTP server, or Cloud Storage SFTP via partner.</div></td>
+          <td class="nc"><span class="tag t-awsonly">AWS only</span><br>Transfer Family = managed file transfer protocols (SFTP/FTP/FTPS/AS2) with S3/EFS backend. GCP has no native equivalent.</td>
+          <td class="ec"><span class="tip">Transfer Family use case: legacy EDI/B2B partners that must send files via SFTP. No code changes needed — they SFTP, you process from S3.</span></td>
+        </tr>
+        <tr>
+          <td>VMware Migration</td>
+          <td><span class="chip chip-aws">VMware Cloud on AWS (VMC)</span><div class="chip-sub">Run VMware workloads on AWS bare metal. No app changes. HCX for live migration.</div></td>
+          <td><span class="chip chip-gcp">Google Cloud VMware Engine (GCVE)</span><div class="chip-sub">VMware on Google Cloud. NSX-T, vSAN, vSphere. HCX for migration.</div></td>
+          <td class="nc"><span class="tag t-match">≈ match</span><br>Both: run VMware software on cloud bare metal. Use as interim step before full cloud-native refactor. VMC = co-developed with VMware (Broadcom).</td>
+          <td class="ec"><span class="tip">The "Relocate" migration strategy = move VMware workloads to VMC/GCVE without any changes. Fastest migration path.</span></td>
+        </tr>
+        <tr>
+          <td>Container Migration</td>
+          <td><span class="chip chip-aws">App2Container (A2C)</span><div class="chip-sub">Containerize Java/.NET apps on EC2/on-prem → ECS/EKS.</div></td>
+          <td><span class="chip chip-gcp">Migrate to Containers</span><div class="chip-sub">Containerize VMs → GKE. Extract app + dependencies into container image.</div></td>
+          <td class="nc"><span class="tag t-similar">~ similar</span><br>Both auto-analyze running apps and generate Dockerfiles/K8s manifests. Part of modernization (Replatform strategy).</td>
+          <td class="ec"><span class="tip">GCP Migrate to Containers: fits Replatform strategy — containerize without full re-architecture. Generates GKE deployment manifests automatically.</span></td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════ -->
+<!-- 9. HA & DISASTER RECOVERY -->
+<!-- ══════════════════════════════════════════════════════ -->
+<div class="section" id="ha">
+  <div class="section-head">
+    <span class="section-emoji">⚡</span>
+    <span class="section-title">High Availability &amp; Disaster Recovery</span>
+    <span class="exam-hot">🔥 Critical exam topic</span>
+    <span class="section-count">Patterns + Services</span>
+  </div>
+  <div class="tbl-wrap">
+    <table>
+      <thead><tr><th>Category</th><th>☁ AWS</th><th>🌐 GCP</th><th>Key Differences</th><th>🔥 Exam Tips</th></tr></thead>
+      <tbody>
+        <tr>
+          <td>DR Strategies</td>
+          <td><span class="chip chip-aws">4 DR Patterns</span><div class="chip-sub">Backup/Restore → Pilot Light → Warm Standby → Multi-Site Active/Active</div></td>
+          <td><span class="chip chip-gcp">Same 4 Patterns</span><div class="chip-sub">Apply identically on GCP using equivalent services</div></td>
+          <td class="nc"><span class="tag t-match">≈ match</span><br><strong>Backup/Restore</strong>: cheapest, highest RTO/RPO. Backups in S3/GCS.<br><strong>Pilot Light</strong>: core DBs replicated, compute off. Scale on disaster.<br><strong>Warm Standby</strong>: scaled-down full env running. Scale on disaster.<br><strong>Multi-Site Active/Active</strong>: lowest RTO/RPO, most expensive.</td>
+          <td class="ec"><span class="gotcha">RTO = how long to recover. RPO = how much data loss acceptable. Exam always tests: which DR strategy for given RTO/RPO/cost constraints.</span><span class="tip">Pilot Light: keep RDS replica + AMI. On disaster: scale EC2, promote RDS replica, update Route 53. RTO = minutes to hours.</span><span class="green">Active/Active: Route 53 weighted/latency routing + DynamoDB Global Tables + Aurora Global DB = near-zero RPO/RTO.</span></td>
+        </tr>
+        <tr>
+          <td>Cross-Region Replication</td>
+          <td><span class="chip chip-aws">S3 CRR + RDS Cross-Region Replica + DynamoDB Global Tables</span></td>
+          <td><span class="chip chip-gcp">GCS Dual-Region + Cloud SQL cross-region read replicas + Spanner global</span></td>
+          <td class="nc"><span class="tag t-similar">~ similar</span><br>AWS: S3 CRR replicates new objects only (not existing). Enable versioning on both buckets. DynamoDB Global Tables = active-active, &lt;1s replication.<br><br>GCP: GCS Dual-Region stores data in 2 regions. Spanner multi-region = global strong consistency.</td>
+          <td class="ec"><span class="gotcha">S3 CRR does NOT replicate: objects before rule creation, delete markers (by default), SSE-C encrypted objects.</span><span class="tip">DynamoDB Global Tables: each region is writable. Last-writer-wins conflict resolution. RPO ≈ seconds.</span></td>
+        </tr>
+        <tr>
+          <td>Multi-AZ Patterns</td>
+          <td><span class="chip chip-aws">ASG Multi-AZ + ALB + RDS Multi-AZ</span><div class="chip-sub">Spread EC2 across ≥2 AZs behind ALB. RDS standby in separate AZ.</div></td>
+          <td><span class="chip chip-gcp">MIG Multi-Zone + Cloud LB + Cloud SQL HA</span><div class="chip-sub">MIG distributes VMs across zones. Cloud SQL HA replica in another zone.</div></td>
+          <td class="nc"><span class="tag t-match">≈ match</span><br>Standard 3-tier HA pattern: LB → Auto-scaling compute group → Multi-AZ/Zone managed database. Apply on both clouds identically.</td>
+          <td class="ec"><span class="tip">Always spread across ≥2 AZs/zones. Single AZ = single point of failure. Exam tests this repeatedly.</span></td>
+        </tr>
+        <tr>
+          <td>Health Checks & Failover</td>
+          <td><span class="chip chip-aws">Route 53 Health Checks + ALB Health Checks</span><div class="chip-sub">DNS failover. ELB removes unhealthy targets. ASG replaces failed instances.</div></td>
+          <td><span class="chip chip-gcp">Cloud DNS + Cloud LB Health Checks + MIG Autohealing</span><div class="chip-sub">LB health probes. MIG autohealing: restart/replace unhealthy VMs.</div></td>
+          <td class="nc"><span class="tag t-match">≈ match</span><br>Route 53 DNS failover ≈ Cloud DNS + Cloud LB (though GCP routing is LB-based not DNS-based primarily).<br><br>ASG with ELB health check: terminate EC2 if ELB marks unhealthy. GCP MIG Autohealing: same concept.</td>
+          <td class="ec"><span class="tip">Route 53 health check types: HTTP/HTTPS endpoint, CloudWatch alarm, other health checks (calculated). Use calculated for complex conditions.</span></td>
+        </tr>
+        <tr>
+          <td>Resilient Architectures</td>
+          <td><span class="chip chip-aws">SQS Decoupling + Dead Letter Queues</span><div class="chip-sub">Buffer between tiers. DLQ captures failed messages for inspection.</div></td>
+          <td><span class="chip chip-gcp">Pub/Sub + Dead Letter Topics</span><div class="chip-sub">Same pattern. Undeliverable messages → Dead Letter Topic.</div></td>
+          <td class="nc"><span class="tag t-match">≈ match</span><br>Decoupling pattern: producer → queue/topic → consumer. If consumer fails, messages persist. DLQ/DLT for failed message handling.</td>
+          <td class="ec"><span class="tip">SQS visibility timeout: how long a consumer has to process a message before it becomes visible again. Set to processing time × 6 to avoid duplicate processing.</span><span class="gotcha">SQS DLQ: set maxReceiveCount. After N failures, message moves to DLQ. Inspect DLQ to find bugs in consumer.</span></td>
+        </tr>
+        <tr>
+          <td>Chaos & Resilience Testing</td>
+          <td><span class="chip chip-aws">AWS Fault Injection Service (FIS)</span><div class="chip-sub">Inject EC2/ECS/EKS/RDS faults. Chaos engineering experiments.</div></td>
+          <td><span class="chip chip-gcp">No native chaos service</span><div class="chip-sub">Use Chaos Monkey, Gremlin, or Litmus Chaos on GKE.</div></td>
+          <td class="nc"><span class="tag t-awsonly">AWS only</span><br>FIS is native chaos engineering. Define experiment templates: inject CPU stress, kill EC2, throttle network. Validate recovery.</td>
+          <td class="ec"><span class="tip">FIS: validate your DR runbooks and auto-recovery before a real disaster. Part of Well-Architected Reliability pillar.</span></td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════ -->
+<!-- 10. MESSAGING & INTEGRATION -->
+<!-- ══════════════════════════════════════════════════════ -->
+<div class="section" id="messaging">
+  <div class="section-head">
+    <span class="section-emoji">📨</span>
+    <span class="section-title">Messaging, Queuing &amp; Integration</span>
+    <span class="exam-hot">🔥 Heavy on exams</span>
+    <span class="section-count">9 services</span>
+  </div>
+  <div class="tbl-wrap">
+    <table>
+      <thead><tr><th>Category</th><th>☁ AWS</th><th>🌐 GCP</th><th>Key Differences</th><th>🔥 Exam Tips</th></tr></thead>
+      <tbody>
+        <tr>
+          <td>Message Queue</td>
+          <td><span class="chip chip-aws">SQS</span><div class="chip-sub">Standard (at-least-once, best-effort order) or FIFO (exactly-once, ordered). Max 14d retention. 256KB msg.</div></td>
+          <td><span class="chip chip-gcp">Pub/Sub (pull)</span><div class="chip-sub">Pull subscribers = queue-like behavior. At-least-once delivery. 7-day retention. 10MB msg.</div></td>
+          <td class="nc"><span class="tag t-similar">~ similar</span><br>SQS Standard: messages may be out of order, delivered &gt;1 time. FIFO: strict order, exactly-once, lower throughput (3000 msg/s with batching).<br><br>Pub/Sub pull = SQS-like. No native FIFO — use ordering key in Pub/Sub for ordered delivery.</td>
+          <td class="ec"><span class="gotcha">SQS FIFO: message group ID = determines ordering. Multiple consumers can process different groups concurrently.</span><span class="tip">Long polling (SQS): reduces empty responses, saves cost. Set ReceiveMessageWaitTime = 20s. Short polling returns immediately even if empty.</span></td>
+        </tr>
+        <tr>
+          <td>Pub/Sub Fanout</td>
+          <td><span class="chip chip-aws">SNS</span><div class="chip-sub">Push to: SQS, Lambda, HTTP, Email, SMS, Mobile Push. Fan-out pattern.</div></td>
+          <td><span class="chip chip-gcp">Pub/Sub (push)</span><div class="chip-sub">Push subscriptions deliver to HTTP endpoints. Topic → multiple subscriptions = fanout.</div></td>
+          <td class="nc"><span class="tag t-similar">~ similar</span><br>SNS is dedicated pub-sub. GCP Pub/Sub combines queue (pull) and fanout (push) in one service.<br><br>SNS → multiple SQS queues = fan-out decoupling pattern. GCP: one Topic → multiple subscriptions.</td>
+          <td class="ec"><span class="tip">SNS + SQS fan-out: SNS publishes once → multiple SQS queues receive. Allows multiple consumers independently processing same event.</span><span class="gotcha">SNS FIFO topics: only deliver to SQS FIFO queues. Cannot fan out to Lambda or HTTP directly.</span></td>
+        </tr>
+        <tr>
+          <td>Event Bus</td>
+          <td><span class="chip chip-aws">EventBridge</span><div class="chip-sub">Default/custom/partner event buses. Rules with patterns. Schema registry. Pipes. Scheduler.</div></td>
+          <td><span class="chip chip-gcp">Eventarc</span><div class="chip-sub">Route events from GCP services → Cloud Run, Cloud Functions, Workflows.</div></td>
+          <td class="nc"><span class="tag t-similar">~ similar</span><br>EventBridge has larger 3rd-party SaaS partner catalog (Salesforce, Zendesk, etc.). EventBridge Scheduler = GCP Cloud Scheduler equivalent. EventBridge Pipes = ETL between source/target.</td>
+          <td class="ec"><span class="tip">EventBridge vs SNS: EventBridge for rich event filtering + routing rules. SNS for simple fanout. EventBridge can filter by specific JSON fields in event payload.</span></td>
+        </tr>
+        <tr>
+          <td>Streaming</td>
+          <td><span class="chip chip-aws">Kinesis Data Streams</span><div class="chip-sub">Shards, 1-365d retention, real-time. Enhanced fan-out. Kinesis Client Library.</div></td>
+          <td><span class="chip chip-gcp">Pub/Sub (streaming)</span><div class="chip-sub">Serverless, auto-scale. No shards. Seek to timestamp. 7d retention.</div></td>
+          <td class="nc"><span class="tag t-similar">~ similar</span><br>Kinesis: manual shard management, ordered within shard, replay. Pub/Sub: serverless, no shard tuning needed, ordering via key.<br><br>Kinesis Data Firehose → S3/Redshift/OpenSearch: managed ingestion pipeline. GCP: Pub/Sub → Dataflow → GCS/BigQuery.</td>
+          <td class="ec"><span class="gotcha">Kinesis: shard = 1 MB/s in, 2 MB/s out. Scale: split shards (double capacity) or merge (halve). Hot shard = repartition needed.</span><span class="tip">Kinesis Enhanced Fan-out: each consumer gets dedicated 2 MB/s per shard (push model). Standard: shared 2 MB/s pull.</span></td>
+        </tr>
+        <tr>
+          <td>Managed Kafka</td>
+          <td><span class="chip chip-aws">MSK (Amazon Managed Streaming for Kafka)</span><div class="chip-sub">Managed Kafka. MSK Serverless available. Connects to Kinesis as well.</div></td>
+          <td><span class="chip chip-gcp">Managed Service for Kafka (MSK on GCP)</span><div class="chip-sub">Available in Marketplace. Or use Confluent Cloud (preferred partner).</div></td>
+          <td class="nc"><span class="tag t-similar">~ similar</span><br>Both clouds support Kafka. AWS has first-party MSK. GCP's native offering is newer — Confluent Cloud is the dominant choice on GCP.</td>
+          <td class="ec"><span class="tip">MSK: use when you need Kafka ecosystem (Kafka Connect, Kafka Streams, Schema Registry). Kinesis for AWS-native simpler streaming.</span></td>
+        </tr>
+        <tr>
+          <td>Workflow Orchestration</td>
+          <td><span class="chip chip-aws">Step Functions</span><div class="chip-sub">Standard (exactly-once, 1yr, async) vs Express (at-least-once, 5min, high-rate). ASL state machine.</div></td>
+          <td><span class="chip chip-gcp">Workflows</span><div class="chip-sub">YAML/syntax-based. Connects GCP services + HTTP endpoints. Error handling, retries built-in.</div></td>
+          <td class="nc"><span class="tag t-match">≈ match</span><br>Step Functions Standard: audit history, long-running. Express: high-volume, short-duration (IoT, streaming). Choose by duration + volume.<br><br>Step Functions integrates with 200+ AWS services natively (SDK integration).</td>
+          <td class="ec"><span class="tip">Step Functions: use for multi-step Lambda orchestration, human approval workflows, saga pattern for distributed transactions.</span><span class="gotcha">Express Workflows: no execution history stored (only CloudWatch). Standard: full execution history for 90 days.</span></td>
+        </tr>
+        <tr>
+          <td>Email Service</td>
+          <td><span class="chip chip-aws">SES</span><div class="chip-sub">Simple Email Service. Transactional + bulk. SMTP or SDK. Bounce/complaint handling.</div></td>
+          <td><span class="chip chip-gcp">(No native equiv)</span><div class="chip-sub">Use SendGrid, Mailgun, or Postmark via Marketplace.</div></td>
+          <td class="nc"><span class="tag t-awsonly">AWS only</span><br>SES = native managed email. Sandbox by default (need production access approval). Integrate with SNS for bounce/complaint notifications.</td>
+          <td class="ec"><span class="tip">SES sending limits: start in sandbox (only to verified emails). Request production access for real sending. Monitor bounce rate &lt;5%, complaint rate &lt;0.1%.</span></td>
+        </tr>
+        <tr>
+          <td>Notification</td>
+          <td><span class="chip chip-aws">SNS → SMS/Email</span><div class="chip-sub">Mobile push: APNs (iOS), FCM (Android). SMS globally.</div></td>
+          <td><span class="chip chip-gcp">Firebase Cloud Messaging (FCM)</span><div class="chip-sub">Mobile push. No native SMS — use Twilio or similar.</div></td>
+          <td class="nc"><span class="tag t-similar">~ similar</span><br>FCM (GCP/Firebase) is the global standard for mobile push notifications. AWS SNS wraps FCM/APNs.</td>
+          <td class="ec"><span class="tip">SNS mobile push: create platform application (APNs/GCM credentials), create endpoint per device, publish to endpoint or subscription.</span></td>
+        </tr>
+        <tr>
+          <td>AppFlow / Connectors</td>
+          <td><span class="chip chip-aws">AppFlow</span><div class="chip-sub">No-code SaaS integration: Salesforce, SAP, ServiceNow → S3/Redshift.</div></td>
+          <td><span class="chip chip-gcp">Application Integration + Connectors</span><div class="chip-sub">Apigee Integration for SaaS connectors. 100+ pre-built connectors.</div></td>
+          <td class="nc"><span class="tag t-similar">~ similar</span><br>Both: low/no-code SaaS data integration. Useful for ERP/CRM → cloud data pipeline without custom code.</td>
+          <td class="ec"><span class="tip">AppFlow: bi-directional. Can also trigger on schedule or event. Useful for salesforce→S3→Redshift pipelines without Glue.</span></td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════ -->
+<!-- 11. DEVOPS & IAC -->
+<!-- ══════════════════════════════════════════════════════ -->
+<div class="section" id="devops">
+  <div class="section-head">
+    <span class="section-emoji">🛠️</span>
+    <span class="section-title">DevOps, CI/CD &amp; Infrastructure as Code</span>
+    <span class="exam-hot">🔥 Both exams test IaC</span>
+    <span class="section-count">9 services</span>
+  </div>
+  <div class="tbl-wrap">
+    <table>
+      <thead><tr><th>Category</th><th>☁ AWS</th><th>🌐 GCP</th><th>Key Differences</th><th>🔥 Exam Tips</th></tr></thead>
+      <tbody>
+        <tr>
+          <td>Infrastructure as Code</td>
+          <td><span class="chip chip-aws">CloudFormation</span><div class="chip-sub">YAML/JSON templates. Stacks, StackSets (multi-account/region), Nested stacks, Drift detection.</div></td>
+          <td><span class="chip chip-gcp">Deployment Manager</span><div class="chip-sub">YAML + Python/Jinja2 templates. Being superseded by Terraform on GCP.</div></td>
+          <td class="nc"><span class="tag t-similar">~ similar</span><br><strong>Terraform</strong> is the recommended IaC on both clouds (and explicitly required on GCP PCA exam since Oct 2025).<br><br>CloudFormation StackSets: deploy stacks across multiple accounts and regions with one template. Requires org integration.</td>
+          <td class="ec"><span class="gotcha">CloudFormation: stack update fails → automatic rollback to previous stable state. Enable termination protection to prevent accidental deletion.</span><span class="tip">StackSets + Organizations: auto-deploy to new accounts when added to OU. Perfect for baseline guardrails and logging setup.</span></td>
+        </tr>
+        <tr>
+          <td>Terraform (Both)</td>
+          <td><span class="chip chip-aws">Terraform (AWS Provider)</span><div class="chip-sub">hashicorp/aws provider. State in S3 + DynamoDB lock. Workspaces for envs.</div></td>
+          <td><span class="chip chip-gcp">Terraform (GCP Provider)</span><div class="chip-sub">hashicorp/google provider. State in GCS. Now explicitly required on PCA exam.</div></td>
+          <td class="nc"><span class="tag t-match">≈ match</span><br>Same Terraform HCL works across both clouds with different providers. Key concepts: plan, apply, state file, modules, workspaces.<br><br>Both support remote state backend. Use S3 (AWS) or GCS (GCP) for team state sharing.</td>
+          <td class="ec"><span class="tip">GCP PCA exam (Oct 2025+): Terraform knowledge required. Know: resource blocks, data sources, modules, state management, import.</span><span class="gotcha">Terraform state lock: DynamoDB (AWS) prevents concurrent applies. GCS state locking via GCS object locking.</span></td>
+        </tr>
+        <tr>
+          <td>CI/CD Pipeline</td>
+          <td><span class="chip chip-aws">CodePipeline</span><div class="chip-sub">Source→Build→Test→Deploy. Integrates CodeCommit/GitHub, CodeBuild, CodeDeploy.</div></td>
+          <td><span class="chip chip-gcp">Cloud Build</span><div class="chip-sub">Serverless CI. YAML steps. Triggers from GitHub, GitLab, GCS, Pub/Sub.</div></td>
+          <td class="nc"><span class="tag t-similar">~ similar</span><br>Cloud Build is simpler (like CodeBuild, not full CodePipeline). GCP Cloud Deploy = managed CD (GitOps-style) for GKE/Cloud Run.<br><br>Both support GitHub Actions as alternative (GitHub is dominant for both clouds).</td>
+          <td class="ec"><span class="tip">Cloud Build substitutions: pass dynamic values (branch name, commit SHA) into build steps. Like CodeBuild environment variables.</span></td>
+        </tr>
+        <tr>
+          <td>Deployment Strategies</td>
+          <td><span class="chip chip-aws">CodeDeploy</span><div class="chip-sub">EC2/ECS/Lambda/on-prem. In-place, Blue/Green, Canary, Linear rollout.</div></td>
+          <td><span class="chip chip-gcp">Cloud Deploy</span><div class="chip-sub">Managed delivery to GKE, Cloud Run, GCE. Canary, Blue/Green, rolling.</div></td>
+          <td class="nc"><span class="tag t-match">≈ match</span><br>Both support Blue/Green (zero downtime) and Canary (gradual %). CodeDeploy Lambda: Canary10Percent5Minutes = shift 10% immediately, rest after 5min if healthy.</td>
+          <td class="ec"><span class="tip">CodeDeploy Blue/Green on ECS: new task set alongside old. Shift traffic via ALB. Rollback = shift back. Zero downtime.</span><span class="gotcha">CodeDeploy in-place: not suitable for production (causes downtime). Use Blue/Green for zero-downtime deploys.</span></td>
+        </tr>
+        <tr>
+          <td>Source Control</td>
+          <td><span class="chip chip-aws">CodeCommit</span><div class="chip-sub">Managed Git. Deprecated (announced 2024). Migrate to GitHub/GitLab.</div></td>
+          <td><span class="chip chip-gcp">Cloud Source Repositories</span><div class="chip-sub">Managed Git mirror. Integrates with Cloud Build. Also migrating to use GitHub/GitLab.</div></td>
+          <td class="nc"><span class="tag t-similar">~ similar</span><br>Both teams mostly use GitHub or GitLab. Native source control products are secondary. CodeCommit is being deprecated by AWS.</td>
+          <td class="ec"><span class="gotcha">CodeCommit is deprecated. Exam may still reference it but real-world: use GitHub Actions + AWS CodeBuild integration.</span></td>
+        </tr>
+        <tr>
+          <td>Build Service</td>
+          <td><span class="chip chip-aws">CodeBuild</span><div class="chip-sub">Managed build. buildspec.yml. Cache in S3. VPC support. Pay per minute.</div></td>
+          <td><span class="chip chip-gcp">Cloud Build</span><div class="chip-sub">Steps in cloudbuild.yaml. Caching in GCS/Artifact Registry. Pay per build-minute.</div></td>
+          <td class="nc"><span class="tag t-match">≈ match</span><br>Both: serverless managed build environments. Supports Docker builds, test execution, artifact publishing.</td>
+          <td class="ec"><span class="tip">CodeBuild in VPC: access private resources (RDS, ElastiCache) during integration tests. Requires VPC config with private subnet + NAT GW.</span></td>
+        </tr>
+        <tr>
+          <td>Artifact Management</td>
+          <td><span class="chip chip-aws">CodeArtifact</span><div class="chip-sub">Managed Maven, npm, PyPI, NuGet, Swift package repo. Proxy public registries.</div></td>
+          <td><span class="chip chip-gcp">Artifact Registry</span><div class="chip-sub">Docker, Maven, npm, Python, Go, APT, RPM. Multi-format. VPC-SC compatible.</div></td>
+          <td class="nc"><span class="tag t-similar">~ similar</span><br>Artifact Registry is more unified (containers + packages in one). CodeArtifact is packages-only; ECR is Docker-only.</td>
+          <td class="ec"><span class="tip">CodeArtifact upstream sources: proxy public repos (npm, PyPI, Maven Central). Cache packages internally — faster builds, no internet dependency.</span></td>
+        </tr>
+        <tr>
+          <td>Systems Manager</td>
+          <td><span class="chip chip-aws">Systems Manager (SSM)</span><div class="chip-sub">Parameter Store, Session Manager (no SSH!), Run Command, Patch Manager, Automation, State Manager.</div></td>
+          <td><span class="chip chip-gcp">OS Config + IAP Tunnel</span><div class="chip-sub">OS Config: patch management. IAP TCP tunnel: SSH without public IP. Secret Manager.</div></td>
+          <td class="nc"><span class="tag t-diff">≠ differs</span><br>SSM is a massive service. <strong>Session Manager</strong> = SSH/RDP to EC2 without bastion, no inbound ports. GCP equivalent: IAP SSH tunnel.</td>
+          <td class="ec"><span class="gotcha">SSM Session Manager: no port 22 needed. Uses SSM agent + IAM permissions. Audit all sessions via CloudTrail. Preferred over bastion hosts on exam.</span><span class="tip">SSM Automation: automate runbooks (patch, backup, AMI creation). Use for auto-remediation triggered by Config or GuardDuty findings.</span></td>
+        </tr>
+        <tr>
+          <td>GitOps</td>
+          <td><span class="chip chip-aws">CodePipeline + Flux/ArgoCD on EKS</span><div class="chip-sub">No native GitOps. Use open-source on EKS.</div></td>
+          <td><span class="chip chip-gcp">Anthos Config Management (ACM)</span><div class="chip-sub">GitOps for GKE. Syncs policies, configs from Git repo to all clusters.</div></td>
+          <td class="nc"><span class="tag t-gcponly">GCP only</span><br>ACM is a native GitOps controller that keeps cluster config in sync with a Git repo. AWS needs ArgoCD/Flux installed on EKS.</td>
+          <td class="ec"><span class="tip">ACM Policy Controller: enforces OPA/Gatekeeper policies across all GKE clusters. Prevent non-compliant K8s resource creation.</span></td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════ -->
+<!-- 12. MONITORING & OBSERVABILITY -->
+<!-- ══════════════════════════════════════════════════════ -->
+<div class="section" id="monitoring">
+  <div class="section-head">
+    <span class="section-emoji">📊</span>
+    <span class="section-title">Monitoring, Logging &amp; Observability</span>
+    <span class="exam-hot">🔥 Tested on both exams</span>
+    <span class="section-count">9 services</span>
+  </div>
+  <div class="tbl-wrap">
+    <table>
+      <thead><tr><th>Category</th><th>☁ AWS</th><th>🌐 GCP</th><th>Key Differences</th><th>🔥 Exam Tips</th></tr></thead>
+      <tbody>
+        <tr>
+          <td>Metrics & Dashboards</td>
+          <td><span class="chip chip-aws">CloudWatch Metrics + Dashboards</span><div class="chip-sub">Basic (5min) vs Detailed (1min) monitoring. Custom metrics via SDK. Anomaly detection.</div></td>
+          <td><span class="chip chip-gcp">Cloud Monitoring</span><div class="chip-sub">Formerly Stackdriver. Metrics, dashboards, uptime checks, alerting. Workspaces for multi-project.</div></td>
+          <td class="nc"><span class="tag t-match">≈ match</span><br>CloudWatch detailed monitoring: $0.014/metric/month — needed for fast ASG scaling. Basic = free 5-minute granularity.<br><br>Both: send custom metrics (e.g., queue depth, business metrics) to trigger scaling decisions.</td>
+          <td class="ec"><span class="gotcha">EC2 memory and disk metrics: NOT built-in to CloudWatch. Must install CloudWatch Agent to collect. Common exam trap.</span><span class="tip">CloudWatch Container Insights: metrics for ECS/EKS containers. Install agent via addon. Collects CPU, memory, network per container.</span></td>
+        </tr>
+        <tr>
+          <td>Alerting</td>
+          <td><span class="chip chip-aws">CloudWatch Alarms</span><div class="chip-sub">Threshold, anomaly detection, composite alarms. States: OK/ALARM/INSUFFICIENT_DATA.</div></td>
+          <td><span class="chip chip-gcp">Cloud Monitoring Alerting Policies</span><div class="chip-sub">Threshold, rate of change, anomaly. Notification channels: email, PagerDuty, Slack, webhook.</div></td>
+          <td class="nc"><span class="tag t-match">≈ match</span><br>CloudWatch <strong>Composite Alarms</strong>: AND/OR logic across multiple alarms. Reduces alarm noise. GCP uses alert policy conditions similarly.</td>
+          <td class="ec"><span class="tip">Composite Alarm pattern: individual alarms → composite alarm → SNS → PagerDuty. Avoids alert floods on correlated failures.</span></td>
+        </tr>
+        <tr>
+          <td>Log Management</td>
+          <td><span class="chip chip-aws">CloudWatch Logs</span><div class="chip-sub">Log Groups, Log Streams. Retention 1d–never. Metric filters. Insights (query). Live tail.</div></td>
+          <td><span class="chip chip-gcp">Cloud Logging</span><div class="chip-sub">Log buckets (_Default, _Required). Log Sinks to GCS/BigQuery/Pub/Sub. Log-based metrics.</div></td>
+          <td class="nc"><span class="tag t-similar">~ similar</span><br>CloudWatch Logs Insights: SQL-like query language for ad-hoc log analysis. GCP Log Explorer: similar querying with advanced filters.<br><br>Both: export logs to object storage (S3/GCS) for long-term archival.</td>
+          <td class="ec"><span class="tip">CloudWatch Logs subscription filter → Kinesis Data Firehose → S3: real-time log archival/analysis pipeline. Common architecture pattern.</span><span class="gotcha">CloudWatch Logs retention: default = never expire. Always set retention policy to control costs.</span></td>
+        </tr>
+        <tr>
+          <td>Distributed Tracing</td>
+          <td><span class="chip chip-aws">X-Ray</span><div class="chip-sub">Service map, traces, segments. X-Ray daemon or SDK. Integrates Lambda, ECS, API GW, SNS.</div></td>
+          <td><span class="chip chip-gcp">Cloud Trace</span><div class="chip-sub">Distributed tracing. Auto-instrumentation for App Engine, Cloud Run. OpenTelemetry support.</div></td>
+          <td class="nc"><span class="tag t-match">≈ match</span><br>Both support <strong>OpenTelemetry</strong> (CNCF standard). Prefer OTel instrumentation for vendor portability.<br><br>X-Ray Groups: filter traces by criteria. Sampling rules: reduce volume, keep representative traces.</td>
+          <td class="ec"><span class="tip">X-Ray sampling: by default samples 1 req/sec + 5% of additional. Customize to capture more traces without overwhelming storage.</span></td>
+        </tr>
+        <tr>
+          <td>Application Performance</td>
+          <td><span class="chip chip-aws">CloudWatch Application Insights</span><div class="chip-sub">Auto-discover app topology. ML-based anomaly + root cause. .NET, SQL Server, etc.</div></td>
+          <td><span class="chip chip-gcp">Cloud Profiler + Error Reporting</span><div class="chip-sub">Profiler: CPU/memory flame graphs continuously. Error Reporting: exception aggregation.</div></td>
+          <td class="nc"><span class="tag t-similar">~ similar</span><br>GCP Profiler is unique — continuous statistical CPU/heap profiling with &lt;1% overhead. No AWS equivalent. Use AWS Compute Optimizer for right-sizing.</td>
+          <td class="ec"><span class="tip">Cloud Profiler: identify hot functions consuming most CPU/memory. Works in production with minimal overhead. Great for performance tuning.</span></td>
+        </tr>
+        <tr>
+          <td>Synthetic Monitoring</td>
+          <td><span class="chip chip-aws">CloudWatch Synthetics</span><div class="chip-sub">Canary scripts test endpoints on schedule. Headless Chrome browser testing.</div></td>
+          <td><span class="chip chip-gcp">Cloud Monitoring Uptime Checks</span><div class="chip-sub">HTTP/HTTPS/TCP checks from global probers. Alert if endpoint fails.</div></td>
+          <td class="nc"><span class="tag t-similar">~ similar</span><br>CloudWatch Synthetics Canaries: full browser-based scripts (Node.js). GCP Uptime Checks: simpler HTTP ping. For complex browser testing on GCP: use third-party.</td>
+          <td class="ec"><span class="tip">Uptime checks: test from multiple global regions. Alert if N out of M probers fail. Prevents false positives from single-region issues.</span></td>
+        </tr>
+        <tr>
+          <td>Cost Monitoring</td>
+          <td><span class="chip chip-aws">Cost Explorer + Budgets</span><div class="chip-sub">Forecast, anomaly detection, savings recommendations. Budgets → SNS alerts.</div></td>
+          <td><span class="chip chip-gcp">Cloud Billing + Cost Management</span><div class="chip-sub">Budget alerts (% of budget). Billing export to BigQuery. Cost breakdown by label/service.</div></td>
+          <td class="nc"><span class="tag t-match">≈ match</span><br>GCP: export billing to BigQuery → run SQL queries for custom cost analysis. AWS: use Cost and Usage Reports (CUR) in S3 → Athena for same.</td>
+          <td class="ec"><span class="tip">Set up billing budgets + alerts for every environment. Budget alert ≠ auto-stops services (it's just an alert). Use Lambda to auto-scale-down dev environments.</span></td>
+        </tr>
+        <tr>
+          <td>Service Health</td>
+          <td><span class="chip chip-aws">AWS Health Dashboard</span><div class="chip-sub">Personal Health Dashboard: events affecting your account. EventBridge integration for auto-response.</div></td>
+          <td><span class="chip chip-gcp">Google Cloud Status + Incident Dashboard</span><div class="chip-sub">Public status page. SCC for account-level events.</div></td>
+          <td class="nc"><span class="tag t-similar">~ similar</span><br>AWS Health → EventBridge → Lambda: auto-respond to AWS service events (e.g., EC2 maintenance → migrate instance).</td>
+          <td class="ec"><span class="tip">AWS Health EventBridge pattern: receive EC2 scheduled maintenance event → automatically stop/start to move to new host. Avoid downtime windows.</span></td>
+        </tr>
+        <tr>
+          <td>Well-Architected Review</td>
+          <td><span class="chip chip-aws">Well-Architected Tool</span><div class="chip-sub">6 pillars: Operational Excellence, Security, Reliability, Performance, Cost, Sustainability.</div></td>
+          <td><span class="chip chip-gcp">Google Cloud Architecture Framework</span><div class="chip-sub">Same 6 pillars (renamed). Now part of GCP PCA exam (Oct 2025).</div></td>
+          <td class="nc"><span class="tag t-match">≈ match</span><br>Both frameworks align on the same 6 pillars. GCP WAF was added to PCA exam in Oct 2025 update.</td>
+          <td class="ec"><span class="tip">Memorize 6 pillars for both exams: OpEx, Security, Reliability, Performance Efficiency, Cost Optimization, Sustainability. Exam questions often ask "which pillar does X address?"</span></td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════ -->
+<!-- 13. DATA & ANALYTICS -->
+<!-- ══════════════════════════════════════════════════════ -->
+<div class="section" id="data">
+  <div class="section-head">
+    <span class="section-emoji">📈</span>
+    <span class="section-title">Analytics &amp; Data Engineering</span>
+    <span class="section-count">9 services</span>
+  </div>
+  <div class="tbl-wrap">
+    <table>
+      <thead><tr><th>Category</th><th>☁ AWS</th><th>🌐 GCP</th><th>Key Differences</th><th>🔥 Exam Tips</th></tr></thead>
+      <tbody>
+        <tr>
+          <td>ETL / Data Pipeline</td>
+          <td><span class="chip chip-aws">Glue</span><div class="chip-sub">Managed Apache Spark ETL. Glue Data Catalog (metastore). Crawlers. Glue Studio (visual ETL).</div></td>
+          <td><span class="chip chip-gcp">Dataflow</span><div class="chip-sub">Apache Beam-based. Unified batch + streaming. Serverless. Auto-scales.</div></td>
+          <td class="nc"><span class="tag t-similar">~ similar</span><br>Glue: Spark-based ETL with Data Catalog for schema management. Dataflow: Beam-based, better for unified stream+batch.<br><br>Glue <strong>Crawlers</strong>: auto-discover schema in S3 → populate Data Catalog. GCP: Dataplex for similar data discovery.</td>
+          <td class="ec"><span class="tip">Glue Data Catalog integrates with Athena, Redshift Spectrum, EMR — single metadata store for the data lake.</span></td>
+        </tr>
+        <tr>
+          <td>Managed Spark/Hadoop</td>
+          <td><span class="chip chip-aws">EMR</span><div class="chip-sub">Elastic MapReduce. Spark, Hadoop, Hive, Presto, Flink. EC2 or Serverless (EMR Serverless).</div></td>
+          <td><span class="chip chip-gcp">Dataproc</span><div class="chip-sub">Managed Spark/Hadoop. Ephemeral clusters (spin up/down). Dataproc Serverless.</div></td>
+          <td class="nc"><span class="tag t-match">≈ match</span><br>Dataproc: clusters spin up in 90 seconds. Use ephemeral clusters (delete after job) to save cost. GCS as data store (not HDFS).<br><br>EMR Serverless: no cluster management, auto-scales workers per job.</td>
+          <td class="ec"><span class="tip">Dataproc cost optimization: use preemptible workers (up to 80% savings) for fault-tolerant Spark jobs.</span></td>
+        </tr>
+        <tr>
+          <td>Interactive SQL on S3/GCS</td>
+          <td><span class="chip chip-aws">Athena</span><div class="chip-sub">Serverless SQL on S3. Pay per TB scanned. Uses Glue Data Catalog. Federated queries.</div></td>
+          <td><span class="chip chip-gcp">BigQuery (external tables + Omni)</span><div class="chip-sub">Query GCS directly with external tables. BigQuery Omni: query S3/Azure Blob from GCP.</div></td>
+          <td class="nc"><span class="tag t-similar">~ similar</span><br>Athena: pay $5/TB scanned — use Parquet + compression + partitioning to reduce cost dramatically.<br><br>BigQuery Omni: unique — query data in AWS S3 or Azure Blob without moving it.</td>
+          <td class="ec"><span class="tip">Athena best practices: Parquet/ORC format, partition by date/region, compress (Snappy/GZIP). Can reduce query cost by 90%+.</span><span class="gotcha">Athena query results go to S3 — set up lifecycle policy on results bucket to expire old queries.</span></td>
+        </tr>
+        <tr>
+          <td>Data Lake</td>
+          <td><span class="chip chip-aws">S3 + Lake Formation</span><div class="chip-sub">Lake Formation: fine-grained access control on Glue Data Catalog. Row/column-level security.</div></td>
+          <td><span class="chip chip-gcp">GCS + Dataplex</span><div class="chip-sub">Dataplex: data mesh, data quality, discovery, governance across GCS/BigQuery/Bigtable.</div></td>
+          <td class="nc"><span class="tag t-similar">~ similar</span><br>Lake Formation: column-level security on data lake tables (via Athena/Glue/Redshift Spectrum). Dataplex: broader data mesh and governance.</td>
+          <td class="ec"><span class="tip">Lake Formation: centralize data lake permissions. Grant table-level, column-level access to analysts without giving full S3 access.</span></td>
+        </tr>
+        <tr>
+          <td>Business Intelligence</td>
+          <td><span class="chip chip-aws">QuickSight</span><div class="chip-sub">ML-powered BI. Q (NL queries). SPICE (in-memory). Pay per session or per author.</div></td>
+          <td><span class="chip chip-gcp">Looker Studio + Looker</span><div class="chip-sub">Looker Studio: free dashboards. Looker: enterprise BI with LookML semantic layer.</div></td>
+          <td class="nc"><span class="tag t-similar">~ similar</span><br>QuickSight SPICE: in-memory engine for fast dashboard queries. Looker (enterprise) has a semantic layer (LookML) for consistent metrics across teams.</td>
+          <td class="ec"><span class="tip">QuickSight: embed dashboards in apps with row-level security (users see only their data). Connect to Redshift, S3/Athena, RDS, XLSX.</span></td>
+        </tr>
+        <tr>
+          <td>Stream Processing</td>
+          <td><span class="chip chip-aws">Kinesis Data Analytics</span><div class="chip-sub">Managed Apache Flink. SQL or Java/Python apps on Kinesis/MSK streams.</div></td>
+          <td><span class="chip chip-gcp">Dataflow</span><div class="chip-sub">Apache Beam unified batch + streaming. Real-time processing on Pub/Sub.</div></td>
+          <td class="nc"><span class="tag t-similar">~ similar</span><br>Kinesis Data Analytics for Flink: stateful stream processing, windowing, joins. Dataflow: same via Apache Beam model.</td>
+          <td class="ec"><span class="tip">Streaming pipeline: Pub/Sub → Dataflow → BigQuery. Allows real-time analytics on streaming data in BigQuery.</span></td>
+        </tr>
+        <tr>
+          <td>Data Transfer / Ingestion</td>
+          <td><span class="chip chip-aws">Kinesis Firehose</span><div class="chip-sub">Near-real-time delivery to S3, Redshift, OpenSearch, Splunk. Transform via Lambda.</div></td>
+          <td><span class="chip chip-gcp">Datastream</span><div class="chip-sub">CDC-based replication from Oracle/MySQL/PostgreSQL → GCS/BigQuery.</div></td>
+          <td class="nc"><span class="tag t-diff">≠ differs</span><br>Firehose = streaming ingest pipeline (Kinesis → data stores). Datastream = CDC replication from operational DBs. Different use cases.</td>
+          <td class="ec"><span class="tip">Firehose: add Lambda transformation (format conversion, enrichment) inline before delivery to S3/Redshift. No code for infrastructure.</span></td>
+        </tr>
+        <tr>
+          <td>Data Catalog / Lineage</td>
+          <td><span class="chip chip-aws">Glue Data Catalog</span><div class="chip-sub">Centralized metadata store. Tables, databases, connections. Used by Athena, EMR, Redshift.</div></td>
+          <td><span class="chip chip-gcp">Dataplex Catalog</span><div class="chip-sub">Unified metadata mgmt. Data lineage tracking. Data quality rules. Discovery across GCP services.</div></td>
+          <td class="nc"><span class="tag t-similar">~ similar</span><br>Dataplex has native data lineage tracking (how data flows across services). AWS lacks native lineage — use third-party or CloudFormation resource tracking.</td>
+          <td class="ec"><span class="tip">Glue Crawler: schedule to auto-update catalog as new data arrives in S3. Without it, new partitions won't be queryable via Athena.</span></td>
+        </tr>
+        <tr>
+          <td>Pub Streaming Ingest</td>
+          <td><span class="chip chip-aws">Kinesis Firehose → Redshift</span><div class="chip-sub">COPY command from S3 to Redshift (batched).</div></td>
+          <td><span class="chip chip-gcp">Pub/Sub → BigQuery subscription</span><div class="chip-sub">Direct Pub/Sub → BigQuery streaming with no pipeline code.</div></td>
+          <td class="nc"><span class="tag t-gcponly">GCP simpler</span><br>GCP: Pub/Sub BigQuery subscription writes directly to BigQuery table — no Dataflow job needed for simple cases. AWS always needs Firehose or custom code.</td>
+          <td class="ec"><span class="tip">Pub/Sub → BigQuery direct: lowest latency, zero code. Use Dataflow when you need transformation/enrichment before writing.</span></td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════ -->
+<!-- 14. AI & ML -->
+<!-- ══════════════════════════════════════════════════════ -->
+<div class="section" id="ai">
+  <div class="section-head">
+    <span class="section-emoji">🤖</span>
+    <span class="section-title">AI &amp; Machine Learning</span>
+    <span class="exam-hot">🔥 New focus on GCP PCA 2025</span>
+    <span class="section-count">10 services</span>
+  </div>
+  <div class="tbl-wrap">
+    <table>
+      <thead><tr><th>Category</th><th>☁ AWS</th><th>🌐 GCP</th><th>Key Differences</th><th>🔥 Exam Tips</th></tr></thead>
+      <tbody>
+        <tr>
+          <td>ML Platform</td>
+          <td><span class="chip chip-aws">SageMaker</span><div class="chip-sub">Studio, Training, Endpoints, Pipelines, Feature Store, Ground Truth, Clarify (bias).</div></td>
+          <td><span class="chip chip-gcp">Vertex AI</span><div class="chip-sub">Workbench, Training, Prediction, Pipelines, Feature Store, Model Registry, Explainability.</div></td>
+          <td class="nc"><span class="tag t-match">≈ match</span><br>Both: end-to-end ML lifecycle. Vertex AI is more unified (single console). SageMaker has more built-in algorithms and tooling breadth.<br><br>Vertex AI <strong>Training Custom Jobs</strong>: run on CPUs, GPUs, TPUs. TPUs = Google proprietary (no AWS equivalent).</td>
+          <td class="ec"><span class="tip">Vertex AI Feature Store: serve precomputed features online (low latency) and offline (batch). Same concept as SageMaker Feature Store.</span><span class="gotcha">TPUs (Tensor Processing Units) = GCP exclusive. Massive speedup for large model training. AWS uses NVIDIA A100/H100 GPUs.</span></td>
+        </tr>
+        <tr>
+          <td>Foundation Models / GenAI</td>
+          <td><span class="chip chip-aws">Bedrock</span><div class="chip-sub">Claude (Anthropic), Llama 3, Titan, Mistral, Stable Diffusion. Guardrails, Agents, Knowledge Bases.</div></td>
+          <td><span class="chip chip-gcp">Vertex AI Model Garden + Gemini API</span><div class="chip-sub">Gemini 1.5/2.0, Llama 3, Claude, Imagen, Codey. Grounding with Google Search.</div></td>
+          <td class="nc"><span class="tag t-similar">~ similar</span><br>GCP's native model is Gemini (multimodal — text, image, video, audio). AWS native is Titan/Nova. Both support Claude (Anthropic).<br><br>GCP <strong>Grounding</strong>: anchor Gemini responses to Google Search or Vertex AI Search for factual accuracy.</td>
+          <td class="ec"><span class="tip">Bedrock Agents: multi-step reasoning, call APIs/Lambda, retrieve from Knowledge Bases (RAG). GCP equivalent: Vertex AI Agents (built on Gemini).</span><span class="gotcha">GCP PCA Oct 2025: Vertex AI, Gemini, AI Hypercomputer, Model Garden all explicitly in exam scope.</span></td>
+        </tr>
+        <tr>
+          <td>RAG / Knowledge Base</td>
+          <td><span class="chip chip-aws">Bedrock Knowledge Bases</span><div class="chip-sub">Managed RAG: S3 → chunking → embeddings → vector store → retrieval.</div></td>
+          <td><span class="chip chip-gcp">Vertex AI Search + Grounding</span><div class="chip-sub">Enterprise Search on your data. Connect to GCS, BigQuery, Cloud SQL documents.</div></td>
+          <td class="nc"><span class="tag t-match">≈ match</span><br>Both implement RAG (Retrieval Augmented Generation). AWS Bedrock Knowledge Bases is more out-of-the-box. GCP uses Vertex AI Search or manual LangChain pattern.</td>
+          <td class="ec"><span class="tip">RAG pattern: user query → embed → vector search → retrieve context → LLM generates grounded answer. Reduces hallucinations.</span></td>
+        </tr>
+        <tr>
+          <td>Vision AI</td>
+          <td><span class="chip chip-aws">Rekognition</span><div class="chip-sub">Object detection, facial analysis, text in images, celebrity, content moderation.</div></td>
+          <td><span class="chip chip-gcp">Vision AI</span><div class="chip-sub">Label detection, OCR, face detection, landmark, logo, safe search. AutoML Vision for custom.</div></td>
+          <td class="nc"><span class="tag t-match">≈ match</span><br>Both: pre-trained vision APIs. Custom models: Rekognition Custom Labels ≈ Vertex AI AutoML Vision.</td>
+          <td class="ec"><span class="tip">Rekognition Video: real-time or stored video analysis. Detects activities, tracks persons. Good for surveillance/media use cases.</span></td>
+        </tr>
+        <tr>
+          <td>NLP / Text</td>
+          <td><span class="chip chip-aws">Comprehend</span><div class="chip-sub">Sentiment, entities, key phrases, PII detection, topic modeling. Comprehend Medical.</div></td>
+          <td><span class="chip chip-gcp">Natural Language AI</span><div class="chip-sub">Entity analysis, sentiment, content classification, syntax. Healthcare NL API.</div></td>
+          <td class="nc"><span class="tag t-match">≈ match</span><br>Both: NLP APIs for text analysis. Comprehend Medical: HIPAA-eligible, extracts medical entities from clinical text.</td>
+          <td class="ec"><span class="tip">Comprehend + Macie: Comprehend for structured NLP analysis. Macie for PII in S3 files. Different tools for different PII detection contexts.</span></td>
+        </tr>
+        <tr>
+          <td>Speech</td>
+          <td><span class="chip chip-aws">Transcribe (STT) + Polly (TTS)</span><div class="chip-sub">Transcribe: batch or streaming. Polly: neural TTS, 60+ voices.</div></td>
+          <td><span class="chip chip-gcp">Speech-to-Text + Text-to-Speech</span><div class="chip-sub">Chirp model (latest): best-in-class ASR. Wavenet + Journey voices.</div></td>
+          <td class="nc"><span class="tag t-match">≈ match</span><br>GCP Speech-to-Text Chirp: trained on 28B+ audio hours. Excellent for real-world noisy audio transcription.</td>
+          <td class="ec"><span class="tip">Transcribe Call Analytics: automatically identifies speakers, sentiment per speaker, issues/outcomes. Great for call center analytics.</span></td>
+        </tr>
+        <tr>
+          <td>Document Processing</td>
+          <td><span class="chip chip-aws">Textract</span><div class="chip-sub">Extract text + tables + forms from PDF/images. Queries API for specific fields.</div></td>
+          <td><span class="chip chip-gcp">Document AI</span><div class="chip-sub">Pre-trained processors (invoice, receipt, W2, contract). Custom document extractors.</div></td>
+          <td class="nc"><span class="tag t-similar">~ similar</span><br>Document AI: domain-specific extractors. Invoice processor = extract line items, totals. Better than generic OCR for structured docs.<br><br>Textract Queries: ask specific questions ("What is the invoice total?") vs extracting everything.</td>
+          <td class="ec"><span class="tip">Textract use case: IDP (Intelligent Document Processing) pipelines — scan → extract → validate → store → downstream processing.</span></td>
+        </tr>
+        <tr>
+          <td>Recommendations</td>
+          <td><span class="chip chip-aws">Personalize</span><div class="chip-sub">Real-time personalized recommendations. User/item/event data. Similar to Netflix engine.</div></td>
+          <td><span class="chip chip-gcp">Recommendations AI (Retail)</span><div class="chip-sub">Product recommendations for e-commerce. Google's retail AI.</div></td>
+          <td class="nc"><span class="tag t-match">≈ match</span><br>Both: managed recommendation engines without ML expertise. Train on historical interaction data (clicks, purchases).</td>
+          <td class="ec"><span class="tip">Personalize: train on catalog + event data. Real-time recommendations via API. Works for products, content, user personalization.</span></td>
+        </tr>
+        <tr>
+          <td>AI Infrastructure</td>
+          <td><span class="chip chip-aws">Trainium + Inferentia</span><div class="chip-sub">Trainium: custom chip for training. Inferentia: custom chip for inference. Ultra-low cost.</div></td>
+          <td><span class="chip chip-gcp">TPU v5 + AI Hypercomputer</span><div class="chip-sub">TPU v5e/v5p: massive scale training. AI Hypercomputer: orchestrated GPU/TPU + networking.</div></td>
+          <td class="nc"><span class="tag t-similar">~ similar</span><br>GCP AI Hypercomputer: integrated system of TPUs + high-bandwidth networking + software stack for large model training. AWS Trainium2 clusters are the equivalent.</td>
+          <td class="ec"><span class="tip">GCP PCA exam: know AI Hypercomputer for large model training scenarios. It's the recommended approach for fine-tuning large Gemini/OSS models on GCP.</span></td>
+        </tr>
+        <tr>
+          <td>Conversational AI</td>
+          <td><span class="chip chip-aws">Lex</span><div class="chip-sub">Build chatbots/voice bots. Integrates with Connect (call center), Lambda (fulfillment).</div></td>
+          <td><span class="chip chip-gcp">Dialogflow CX / ES</span><div class="chip-sub">Enterprise conversation design. CCAI (Contact Center AI). Agent Assist.</div></td>
+          <td class="nc"><span class="tag t-similar">~ similar</span><br>Dialogflow CX: state-based visual flow design. More powerful for complex conversation branching. Lex: simpler intent/slot model.</td>
+          <td class="ec"><span class="tip">Lex + Connect: full managed call center. Lex handles voice/chat, Connect routes calls, Lambda fulfills requests. Quick to deploy CCAI on AWS.</span></td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════ -->
+<!-- 15. HYBRID & EDGE -->
+<!-- ══════════════════════════════════════════════════════ -->
+<div class="section" id="hybrid">
+  <div class="section-head">
+    <span class="section-emoji">🔗</span>
+    <span class="section-title">Hybrid, Multi-Cloud &amp; Edge</span>
+    <span class="section-count">8 services</span>
+  </div>
+  <div class="tbl-wrap">
+    <table>
+      <thead><tr><th>Category</th><th>☁ AWS</th><th>🌐 GCP</th><th>Key Differences</th><th>🔥 Exam Tips</th></tr></thead>
+      <tbody>
+        <tr>
+          <td>Cloud on Premises</td>
+          <td><span class="chip chip-aws">AWS Outposts</span><div class="chip-sub">AWS-managed rack delivered to your DC. Run EC2, ECS, EKS, RDS locally. AWS console managed.</div></td>
+          <td><span class="chip chip-gcp">Google Distributed Cloud (GDC)</span><div class="chip-sub">Run GKE, GCP services on-prem or at edge. Air-gapped option for sensitive workloads.</div></td>
+          <td class="nc"><span class="tag t-similar">~ similar</span><br>Outposts: fully managed by AWS, extends AWS region to your DC. Latency-sensitive workloads near on-prem data.<br><br>GDC: supports air-gapped (no internet) mode — unique for defense/gov workloads.</td>
+          <td class="ec"><span class="tip">Outposts use case: apps that need single-digit ms latency to on-prem resources, or data residency requires staying local.</span></td>
+        </tr>
+        <tr>
+          <td>Local Zones / Edge</td>
+          <td><span class="chip chip-aws">Local Zones + Wavelength</span><div class="chip-sub">Local Zones: AWS infra in metro cities. Wavelength: AWS compute embedded in 5G carrier networks.</div></td>
+          <td><span class="chip chip-gcp">GDC Edge + Mobile Edge Cloud</span><div class="chip-sub">GKE at telecom edge. Partnership with telcos for 5G edge compute.</div></td>
+          <td class="nc"><span class="tag t-similar">~ similar</span><br>Wavelength = AWS in 5G network for ultra-low latency mobile apps. Local Zones = sub-10ms to specific metros.<br><br>GCP Mobile Edge Cloud = similar 5G edge compute partnership model.</td>
+          <td class="ec"><span class="tip">Wavelength use case: AR/VR, real-time gaming, connected vehicles — need &lt;10ms latency from mobile device. Traffic never leaves carrier network.</span></td>
+        </tr>
+        <tr>
+          <td>Multi-Cloud Management</td>
+          <td><span class="chip chip-aws">No native multi-cloud</span><div class="chip-sub">Use Terraform, Pulumi for multi-cloud IaC. AWS systems assume AWS-only.</div></td>
+          <td><span class="chip chip-gcp">Anthos</span><div class="chip-sub">Manage K8s clusters on GCP, AWS, Azure, on-prem from single GCP control plane.</div></td>
+          <td class="nc"><span class="tag t-gcponly">GCP only</span><br>Anthos is GCP's key differentiator for multi-cloud. Manage AWS EKS clusters from GCP Anthos. AWS has no equivalent multi-cloud management plane.</td>
+          <td class="ec"><span class="tip">Anthos Fleet: group of registered clusters (GKE, EKS, on-prem). Apply consistent config, policies, service mesh across all via ACM.</span></td>
+        </tr>
+        <tr>
+          <td>IoT</td>
+          <td><span class="chip chip-aws">IoT Core</span><div class="chip-sub">Device gateway (MQTT/HTTP). Rules Engine → Kinesis/Lambda/S3/DynamoDB. Device Shadow.</div></td>
+          <td><span class="chip chip-gcp">Cloud IoT Core (deprecated 2023)</span><div class="chip-sub">Deprecated. GCP recommends: Pub/Sub + IoT partner solutions (HiveMQ, etc.).</div></td>
+          <td class="nc"><span class="tag t-awsonly">AWS only</span><br>GCP retired Cloud IoT Core in 2023. AWS IoT Core is actively developed with Greengrass (edge), Fleet Provisioning, Jobs.<br><br>AWS Greengrass: run Lambda functions + ML inference on IoT devices.</td>
+          <td class="ec"><span class="tip">IoT Core + Kinesis: device → IoT Core → Kinesis Data Streams → Lambda (real-time processing). Classic IoT pipeline.</span></td>
+        </tr>
+        <tr>
+          <td>Edge Functions</td>
+          <td><span class="chip chip-aws">Lambda@Edge + CloudFront Functions</span><div class="chip-sub">Lambda@Edge: 5s timeout, runs at 400+ PoPs, full Node/Python. CF Functions: &lt;1ms, viewer only.</div></td>
+          <td><span class="chip chip-gcp">No native edge compute</span><div class="chip-sub">Cloud CDN caching only. Use Cloud Run with Premium tier for near-edge compute.</div></td>
+          <td class="nc"><span class="tag t-awsonly">AWS only</span><br>Lambda@Edge = run server-side logic at CloudFront edge (A/B testing, auth, URL rewrites, personalization). GCP has no equivalent.</td>
+          <td class="ec"><span class="tip">CloudFront Functions: manipulate HTTP request/response headers at viewer level. Sub-millisecond. Free tier. Great for URL rewrites, simple auth.</span></td>
+        </tr>
+        <tr>
+          <td>Private 5G</td>
+          <td><span class="chip chip-aws">AWS Private 5G</span><div class="chip-sub">Managed private mobile network. Ship SIM cards + equipment. Factory, warehouse, campus use.</div></td>
+          <td><span class="chip chip-gcp">No equivalent</span><div class="chip-sub">Partnerships with telcos via GDC Mobile Edge Cloud.</div></td>
+          <td class="nc"><span class="tag t-awsonly">AWS only</span><br>Private 5G: deploy private LTE/5G network at your facility. AWS ships the equipment and manages it. No GCP equivalent.</td>
+          <td class="ec"><span class="tip">Private 5G use case: factory floor IoT devices with thousands of sensors, no WiFi. Reliable, low-latency private cellular.</span></td>
+        </tr>
+        <tr>
+          <td>Bare Metal</td>
+          <td><span class="chip chip-aws">Dedicated Hosts + Dedicated Instances</span><div class="chip-sub">Dedicated Hosts: physical server, license control. Dedicated Instances: isolated hardware.</div></td>
+          <td><span class="chip chip-gcp">Sole-Tenant Nodes</span><div class="chip-sub">Physical server dedicated to your VMs. BYOL (Windows, SQL Server). Compliance isolation.</div></td>
+          <td class="nc"><span class="tag t-match">≈ match</span><br>AWS Dedicated Host = GCP Sole-Tenant Node. Use for: BYOL licenses that require physical server affinity, compliance requiring isolation.</td>
+          <td class="ec"><span class="tip">Dedicated Host: track socket/core/VM counts for BYOL license compliance. Dedicated Instance = just hardware isolation, no license visibility.</span></td>
+        </tr>
+        <tr>
+          <td>Hybrid DNS</td>
+          <td><span class="chip chip-aws">Route 53 Resolver</span><div class="chip-sub">Inbound/Outbound endpoints. DNS queries: on-prem ↔ VPC. Forwarding rules.</div></td>
+          <td><span class="chip chip-gcp">Cloud DNS Forwarding + Peering</span><div class="chip-sub">DNS peering between VPCs. Forwarding zones to on-prem DNS servers.</div></td>
+          <td class="nc"><span class="tag t-match">≈ match</span><br>Route 53 Resolver: on-prem servers query AWS private hosted zones (inbound). EC2 queries on-prem DNS (outbound via forwarding rules).</td>
+          <td class="ec"><span class="tip">Inbound resolver endpoint: on-prem → R53 endpoint IP (in VPC) → resolves .internal domains. Requires Direct Connect or VPN.</span></td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════ -->
+<!-- 16. COST OPTIMIZATION -->
+<!-- ══════════════════════════════════════════════════════ -->
+<div class="section" id="cost">
+  <div class="section-head">
+    <span class="section-emoji">💰</span>
+    <span class="section-title">Cost Optimization &amp; Pricing Models</span>
+    <span class="exam-hot">🔥 Both exams test cost decisions</span>
+    <span class="section-count">Concepts + Tools</span>
+  </div>
+  <div class="tbl-wrap">
+    <table>
+      <thead><tr><th>Category</th><th>☁ AWS</th><th>🌐 GCP</th><th>Key Differences</th><th>🔥 Exam Tips</th></tr></thead>
+      <tbody>
+        <tr>
+          <td>Compute Pricing</td>
+          <td><span class="chip chip-aws">On-Demand / Reserved / Savings Plans / Spot</span><div class="chip-sub">RI: 1yr/3yr, All/Partial/No Upfront. Savings Plans: Compute or EC2. Spot: up to 90% off.</div></td>
+          <td><span class="chip chip-gcp">On-Demand / CUD / SUD / Spot</span><div class="chip-sub">CUD: 1yr/3yr resource-based or spend-based. SUD: auto-discount for sustained use. Spot: up to 91% off.</div></td>
+          <td class="nc"><span class="tag t-diff">≠ differs</span><br>GCP <strong>SUD (Sustained Use Discounts)</strong>: automatic, no commitment. Use a VM &gt;25% of month → tiered discount applied. No AWS equivalent.<br><br>AWS <strong>Compute Savings Plans</strong>: most flexible — apply to any EC2 family/region/OS/tenancy + Fargate + Lambda.</td>
+          <td class="ec"><span class="gotcha">Savings Plans vs Reserved Instances: Savings Plans are more flexible (any instance type). RIs lock to specific instance type but can convert (Convertible RI).</span><span class="tip">GCP: SUD kicks in automatically. CUD for additional savings (up to 57% for 3yr). Use CUD for predictable baseline + Spot for variable peaks.</span></td>
+        </tr>
+        <tr>
+          <td>Storage Costs</td>
+          <td><span class="chip chip-aws">S3 Storage Tiers + Intelligent-Tiering</span><div class="chip-sub">S3 Intelligent-Tiering: auto-move between tiers based on access patterns. No retrieval fees.</div></td>
+          <td><span class="chip chip-gcp">GCS Storage Classes + Autoclass</span><div class="chip-sub">Autoclass: auto-move between Standard/Nearline/Coldline/Archive per object.</div></td>
+          <td class="nc"><span class="tag t-match">≈ match</span><br>S3 Intelligent-Tiering ≈ GCS Autoclass. Both auto-optimize storage costs without manual lifecycle rules. Both have small monitoring fees per object.</td>
+          <td class="ec"><span class="tip">S3 Intelligent-Tiering: no retrieval fees for frequent access tier. Use when access patterns are unknown or variable.</span><span class="gotcha">GCS Autoclass: Nearline min 30 days, Coldline min 90 days. If deleted early → charged for minimum duration.</span></td>
+        </tr>
+        <tr>
+          <td>Right-Sizing</td>
+          <td><span class="chip chip-aws">Compute Optimizer</span><div class="chip-sub">ML-based recommendations for EC2, Auto Scaling, EBS, Lambda, ECS on Fargate. Shows under/over-provisioned.</div></td>
+          <td><span class="chip chip-gcp">VM Recommender + Idle Resource Recs</span><div class="chip-sub">Recommends smaller machine types, removes idle VMs, unattached disks, unused IPs.</div></td>
+          <td class="nc"><span class="tag t-match">≈ match</span><br>Both analyze CloudWatch/Cloud Monitoring metrics and recommend right-sized resources. Enable for entire org for max coverage.</td>
+          <td class="ec"><span class="tip">Compute Optimizer: requires minimum 30 days of CloudWatch metrics. Enable Enhanced metrics for memory recommendations (needs CW agent).</span></td>
+        </tr>
+        <tr>
+          <td>Cost Visibility</td>
+          <td><span class="chip chip-aws">Cost Explorer + Cost & Usage Reports</span><div class="chip-sub">CUR: detailed hourly usage + cost. Athena + QuickSight for custom dashboards.</div></td>
+          <td><span class="chip chip-gcp">Billing Export to BigQuery</span><div class="chip-sub">Detailed usage + pricing export. Looker Studio for dashboards. Labels for cost allocation.</div></td>
+          <td class="nc"><span class="tag t-match">≈ match</span><br>Standard pattern: export detailed billing data → data warehouse → BI tool. Both clouds support this. GCP uses BigQuery (serverless), AWS uses Athena+S3.</td>
+          <td class="ec"><span class="tip">CUR + Athena + QuickSight: org-wide cost dashboard. Tag every resource (team, env, project) → cost allocation report per team for chargeback.</span></td>
+        </tr>
+        <tr>
+          <td>License Optimization</td>
+          <td><span class="chip chip-aws">License Manager</span><div class="chip-sub">Track BYOL licenses. Rules to prevent over-deployment. Integrates with Systems Manager.</div></td>
+          <td><span class="chip chip-gcp">No equivalent</span><div class="chip-sub">BYOL via Sole-Tenant Nodes. Manual license tracking.</div></td>
+          <td class="nc"><span class="tag t-awsonly">AWS only</span><br>License Manager tracks SQL Server, Oracle, Windows licenses. Prevent accidental over-usage and licensing audits.</td>
+          <td class="ec"><span class="tip">Dedicated Hosts + License Manager: bring your own SQL Server/Oracle licenses. Must track socket/core counts per dedicated host.</span></td>
+        </tr>
+        <tr>
+          <td>Anomaly Detection</td>
+          <td><span class="chip chip-aws">Cost Anomaly Detection</span><div class="chip-sub">ML detects unusual spending. SNS alerts. Per-service, account, or tag.</div></td>
+          <td><span class="chip chip-gcp">Billing Budget Alerts + Cloud Monitoring</span><div class="chip-sub">Budget thresholds: alert at 50%, 90%, 100% of budget.</div></td>
+          <td class="nc"><span class="tag t-similar">~ similar</span><br>AWS Cost Anomaly Detection: proactive ML detection, no thresholds needed. GCP requires setting explicit budget thresholds.</td>
+          <td class="ec"><span class="tip">Set up Cost Anomaly Detection per service (EC2, RDS separately). Catch runaway spot fleets, leaked dev environments, accidental data transfers.</span></td>
+        </tr>
+        <tr>
+          <td>Network Cost Optimization</td>
+          <td><span class="chip chip-aws">VPC Endpoints + NAT Gateway optimization</span><div class="chip-sub">Gateway endpoint: S3/DynamoDB free. Interface endpoint: paid. NAT GW: $0.045/GB transfer.</div></td>
+          <td><span class="chip chip-gcp">Private Google Access + Private Service Connect</span><div class="chip-sub">Private Google Access: VMs without public IPs access Google APIs. PSC: private access to GCP services.</div></td>
+          <td class="nc"><span class="tag t-similar">~ similar</span><br>AWS Gateway endpoints (S3/DynamoDB) eliminate NAT GW transfer costs. GCP Private Google Access eliminates egress for GCP API traffic.</td>
+          <td class="ec"><span class="gotcha">Exam cost trap: Lambda/EC2 in private subnet accessing S3 via NAT GW → expensive. Use S3 Gateway VPC Endpoint instead (free). Saves $45+/TB of S3 traffic.</span></td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════ -->
+<!-- 17. KEY CONCEPTS & TERMINOLOGY -->
+<!-- ══════════════════════════════════════════════════════ -->
+<div class="section" id="concepts">
+  <div class="section-head">
+    <span class="section-emoji">🌍</span>
+    <span class="section-title">Key Concepts, Terminology &amp; Gotchas</span>
+    <span class="exam-hot">🔥 Foundation for all exam questions</span>
+    <span class="section-count">Core concepts</span>
+  </div>
+  <div class="tbl-wrap">
+    <table>
+      <thead><tr><th>Concept</th><th>☁ AWS</th><th>🌐 GCP</th><th>Critical Difference</th><th>🔥 Exam Gotcha</th></tr></thead>
+      <tbody>
+        <tr>
+          <td>Geography</td>
+          <td><span class="chip chip-aws">Region → AZ → Data Center</span><div class="chip-sub">32 regions, 102 AZs. Most services are regional. Some global (IAM, Route53, CloudFront).</div></td>
+          <td><span class="chip chip-gcp">Region → Zone → Data Center</span><div class="chip-sub">40+ regions, 120+ zones. VPC is global. Most services regional.</div></td>
+          <td class="nc">AWS AZ = GCP Zone. AWS Region = GCP Region.<br><br>GCP VPC spans all regions globally. AWS VPC is region-scoped — cross-region needs peering or TGW.</td>
+          <td class="ec"><span class="gotcha">AWS: S3 is global namespace but data stored in specific region. IAM is global. CloudWatch is per-region — no cross-region metrics natively.</span></td>
+        </tr>
+        <tr>
+          <td>Billing Unit</td>
+          <td><span class="chip chip-aws">AWS Account</span><div class="chip-sub">Root user owns account. IAM users within. Consolidated billing via Organizations.</div></td>
+          <td><span class="chip chip-gcp">GCP Project</span><div class="chip-sub">Fundamental isolation unit. Each project = separate billing, IAM, APIs, quotas.</div></td>
+          <td class="nc">GCP Projects are more granular — a typical org has hundreds. AWS Accounts are broader — a typical org has dozens.<br><br>GCP: enable APIs per project. AWS: services enabled by default.</td>
+          <td class="ec"><span class="gotcha">GCP: APIs must be explicitly enabled per project (e.g., enable Compute Engine API, BigQuery API). AWS services are always available — just needs IAM permissions.</span></td>
+        </tr>
+        <tr>
+          <td>Identity Model</td>
+          <td><span class="chip chip-aws">IAM Users + Roles + Policies (JSON)</span><div class="chip-sub">Identity-centric. Policy attached to identity or resource. Evaluation: explicit deny wins.</div></td>
+          <td><span class="chip chip-gcp">Members + Roles + Bindings (resource-centric)</span><div class="chip-sub">Bindings attach to resources. IAM conditions for context-aware access.</div></td>
+          <td class="nc">AWS: "What can this identity do?" — policy-based. GCP: "Who has what role on this resource?" — resource binding-based. Different mental model.</td>
+          <td class="ec"><span class="gotcha">GCP: no deny rules (IAM conditions can restrict). AWS: explicit Deny in any policy overrides all Allows. GCP: can't explicitly deny — only restrict via Org Policy or IAM Conditions.</span></td>
+        </tr>
+        <tr>
+          <td>Service Account vs Role</td>
+          <td><span class="chip chip-aws">IAM Role (EC2 Instance Profile)</span><div class="chip-sub">Temporary credentials via STS. No long-lived keys on instances. Rotate automatically.</div></td>
+          <td><span class="chip chip-gcp">Service Account</span><div class="chip-sub">VM gets SA automatically. SA has roles. Workload Identity for GKE pods (keyless).</div></td>
+          <td class="nc">Both: don't use long-lived credentials on compute. AWS: attach role to EC2. GCP: assign SA to VM.<br><br>GCP SA can also be granted roles ON other SAs (SA impersonation chain).</td>
+          <td class="ec"><span class="tip">GCP SA key files = long-lived, risky. Prefer Workload Identity Federation (keyless). AWS IRSA for EKS: no key files, IAM role per pod via token projection.</span></td>
+        </tr>
+        <tr>
+          <td>Network Default</td>
+          <td><span class="chip chip-aws">Default VPC created per region</span><div class="chip-sub">Has public subnets in each AZ. Not recommended for production — use custom VPC.</div></td>
+          <td><span class="chip chip-gcp">Default VPC + Auto-mode network</span><div class="chip-sub">Auto-mode creates subnets in every region. Use custom-mode for production.</div></td>
+          <td class="nc">Both: default networks are convenient for testing, bad for production. Always use custom/dedicated VPCs with CIDR planning for prod.</td>
+          <td class="ec"><span class="gotcha">GCP Auto-mode network: creates /20 subnets in all regions. Cannot be expanded to custom CIDR without recreating. Use custom mode from the start.</span></td>
+        </tr>
+        <tr>
+          <td>Data Residency</td>
+          <td><span class="chip chip-aws">Regional isolation + Data Perimeter</span><div class="chip-sub">S3 bucket policy, SCP, resource policy to prevent cross-region data movement.</div></td>
+          <td><span class="chip chip-gcp">Resource Location Constraint (Org Policy)</span><div class="chip-sub"><code>constraints/gcp.resourceLocations</code> restricts resource creation to specific regions.</div></td>
+          <td class="nc">GCP: single Org Policy enforces data residency org-wide. AWS: requires combination of SCPs + S3 bucket policies + IAM conditions + Config rules.</td>
+          <td class="ec"><span class="tip">AWS Data Perimeter: use SCPs to prevent data from leaving org (deny s3:* to external principals). Combine with S3 Block Public Access organization-wide.</span></td>
+        </tr>
+        <tr>
+          <td>Shared Responsibility</td>
+          <td><span class="chip chip-aws">AWS: Security OF the Cloud</span><div class="chip-sub">AWS manages: hardware, DC, hypervisor, managed services. Customer manages: OS, apps, data, IAM.</div></td>
+          <td><span class="chip chip-gcp">Google: Infrastructure Security</span><div class="chip-sub">Same model. Google manages: hardware, network, hypervisor. Customer: app, data, access.</div></td>
+          <td class="nc">For managed services (RDS, Cloud SQL): cloud manages OS patching too. For EC2/GCE: you manage OS. The higher the abstraction, the more cloud manages.</td>
+          <td class="ec"><span class="tip">Exam: who patches the OS on RDS? AWS. On EC2? Customer. On Lambda? AWS. On EKS worker nodes (EC2)? Customer. Managed node group? AWS handles OS patches if you enable.</span></td>
+        </tr>
+        <tr>
+          <td>Encryption at Rest</td>
+          <td><span class="chip chip-aws">Default encryption available on all major services</span><div class="chip-sub">S3, EBS, RDS, etc. Default: AWS-managed keys. Custom: KMS CMK.</div></td>
+          <td><span class="chip chip-gcp">Default encryption on all data at rest</span><div class="chip-sub">Google-managed by default. CMEK for customer-managed keys. CSEK for customer-supplied keys.</div></td>
+          <td class="nc"><span class="tag t-match">≈ match</span><br>GCP encrypts everything at rest by default (no opt-in needed). AWS requires enabling encryption on each service (some have it on by default now).</td>
+          <td class="ec"><span class="gotcha">AWS: EBS not encrypted by default (in older accounts). Enable "Default EBS Encryption" at account level. New EC2 instances: enable EBS encryption by default in settings.</span></td>
+        </tr>
+        <tr>
+          <td>SLA Comparison</td>
+          <td><span class="chip chip-aws">AWS SLAs (key examples)</span><div class="chip-sub">EC2: 99.99%. S3: 99.9%. RDS Multi-AZ: 99.95%. Lambda: 99.95%. Route53: 100%.</div></td>
+          <td><span class="chip chip-gcp">GCP SLAs (key examples)</span><div class="chip-sub">GCE (regional MIG): 99.99%. GCS: 99.9% (multi-region: 99.95%). Cloud SQL (HA): 99.95%. Spanner (multi-region): 99.999%.</div></td>
+          <td class="nc">Spanner multi-region: 99.999% (five nines) — highest SLA of any DB on any cloud. GKE Autopilot: 99.95%. Cloud Run: 99.95%.</td>
+          <td class="ec"><span class="tip">SLA exam questions: pick service/config that meets given availability requirement. 99.99% usually needs multi-AZ/zone + LB. 99.999% needs multi-region.</span></td>
+        </tr>
+        <tr>
+          <td>Quotas / Limits</td>
+          <td><span class="chip chip-aws">Service Quotas (soft + hard limits)</span><div class="chip-sub">Service Quotas dashboard. Request increases. Some limits apply per account, some per region.</div></td>
+          <td><span class="chip chip-gcp">Quotas per Project + per Region</span><div class="chip-sub">Request quota increases via console. APIs must be enabled per project.</div></td>
+          <td class="nc">Both: always plan for quota increases before large deployments. Common limits: EC2/GCE instance limits, Lambda concurrency, API rate limits.</td>
+          <td class="ec"><span class="gotcha">Lambda concurrency: default 1000/region. If you need more: request increase. If hitting limit: Reserved Concurrency can starve other functions — plan allocation carefully.</span></td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+</div><!-- /.wrapper -->
+
+<div class="footer">
+  <p>🎯 AWS SAP-C02 &amp; GCP Professional Cloud Architect Master Reference &nbsp;·&nbsp; 17 Sections &nbsp;·&nbsp; 100+ Services Mapped</p>
+  <p style="margin-top:0.5rem;color:var(--border2)">Services change — always verify with official AWS / GCP documentation before exams.</p>
+</div>
+
+</body>
+</html>
