@@ -1,0 +1,51 @@
+pipeline {
+    agent any
+
+    stages {
+        stage('Build & Test') {
+            steps {
+                // Your build step that generates the jacoco.xml
+                // e.g., sh './gradlew test jacocoTestReport' or sh 'mvn test'
+                echo 'Building and running tests...'
+            }
+        }
+
+        stage('Parse JaCoCo Results') {
+            steps {
+                script {
+                    // Define the path to your jacoco.xml
+                    def jacocoXmlPath = "${WORKSPACE}/target/site/jacoco/jacoco.xml" 
+                    
+                    // Verify the file exists before parsing
+                    if (fileExists(jacocoXmlPath)) {
+                        
+                        // Parse the XML file
+                        def xml = new XmlParser(false, false).parse(jacocoXmlPath)
+                        
+                        // Find the global/total method counter (usually at the root <report> level)
+                        def methodCounter = xml.counter.find { it.'@type' == 'METHOD' }
+                        
+                        if (methodCounter) {
+                            int missed = methodCounter.'@missed'.toInteger()
+                            int covered = methodCounter.'@covered'.toInteger()
+                            int total = missed + covered
+                            
+                            // Print the results to the Jenkins console log
+                            echo "======================================"
+                            echo "JaCoCo Function/Method Metrics:"
+                            echo "Covered Functions: ${covered}"
+                            echo "Total Functions:   ${total}"
+                            echo "Missed Functions:  ${missed}"
+                            echo "======================================"
+                        } else {
+                            error "Could not find METHOD counter in JaCoCo XML."
+                        }
+                        
+                    } else {
+                        error "JaCoCo XML report not found at: ${jacocoXmlPath}"
+                    }
+                }
+            }
+        }
+    }
+}
