@@ -1,0 +1,13 @@
+function handler(event) {
+    var request = event.request;
+    var response = event.response;
+
+    // Target the root path and explicitly named index.html
+    if (request.uri === '/' || request.uri === '/index.html') {
+        response.headers['cache-control'] = { 
+            value: 'no-cache, no-store, must-revalidate' 
+        };
+    }
+
+    return response;
+}
